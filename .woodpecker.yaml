@@ -15,7 +15,7 @@ steps:
   - name: 镜像构建与推送
     image: docker.m.daocloud.io/woodpeckerci/plugin-docker-buildx:latest
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock # ⚠️ Docker in Docker 挂载
+      - /var/run/docker.sock:/var/run/docker.sock
     settings:
       repo: registry.cn-zhangjiakou.aliyuncs.com/abhors/demo
       tags: latest
@@ -24,6 +24,9 @@ steps:
         from_secret: aliyun_acr_username
       password:
         from_secret: aliyun_acr_password
+      # 👇 核心：为其指定一个绝对能稳定拉取三方大类目的镜像加速源
+      # 这样当它去找 moby/buildkit 时，会自动走大厂的代理通道，100% 不会超时
+      mirror: https://docker.m.daocloud.io
       # 很多时候 plugins/docker 内部默认会处理 context，不需要你手动挂载 docker.sock
       # 但需要确保服务器配置了 WOODPECKER_PLUGINS_PRIVILEGED=plugins/docker
     when:
