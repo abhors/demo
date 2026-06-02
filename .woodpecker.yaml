@@ -1,7 +1,7 @@
 # .woodpecker.yaml
 steps:
   - name: Java 构建
-    image: maven:3.9.6-eclipse-temurin-17
+    image: docker.m.daocloud.io/library/maven:3.9.6-eclipse-temurin-17
     pull: true
     commands:
       - mvn clean package -DskipTests
