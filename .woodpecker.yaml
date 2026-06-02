@@ -5,19 +5,14 @@ steps:
     pull: true
     commands:
       - mvn clean package -DskipTests
-    # volumes 挂载在单工作流中可正常使用
+    # 注意：使用 volumes 必须在 Web UI 中开启 "Trusted" 权限
     volumes:
       - /tmp/maven-cache:/root/.m2
+    when:
+      event: [push, pull_request]
+      branch: main
 
-  - name: Docker 构建
-    image: docker:latest
-    pull: true
-    commands:
-      - docker build -t registry.cn-zhangjiakou.aliyuncs.com/abhors/demo:latest .
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-
-  - name: 镜像推送
+  - name: 镜像构建与推送
     image: plugins/docker
     settings:
       repo: registry.cn-zhangjiakou.aliyuncs.com/abhors/demo
@@ -27,3 +22,8 @@ steps:
         from_secret: aliyun_acr_username
       password:
         from_secret: aliyun_acr_password
+      # 很多时候 plugins/docker 内部默认会处理 context，不需要你手动挂载 docker.sock
+      # 但需要确保服务器配置了 WOODPECKER_PLUGINS_PRIVILEGED=plugins/docker
+    when:
+      event: push
+      branch: main
