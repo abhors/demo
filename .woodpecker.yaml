@@ -1,43 +1,29 @@
 # .woodpecker.yaml
-workflows:
-  build-and-deploy:
-    name: Java应用构建与部署
-    # 触发条件，仅在 main/master 分支推送时运行
-    when:
-      - event: push
-        branch: main
-      - event: push
-        branch: master
+steps:
+  - name: Java 构建
+    image: maven:3.9.6-eclipse-temurin-17
+    pull: true
+    commands:
+      - mvn clean package -DskipTests
+    # volumes 挂载在单工作流中可正常使用
+    volumes:
+      - /tmp/maven-cache:/root/.m2
 
-    steps:
-      # 1. 使用 Maven 构建 Java 应用，并缓存依赖
-      - name: Java 构建
-        image: maven:3.9.6-eclipse-temurin-17
-        pull: true
-        commands:
-          - mvn clean package -DskipTests  # 跳过测试以加快构建
-        volumes:
-          - /tmp/maven-cache:/root/.m2    # 缓存 Maven 依赖
+  - name: Docker 构建
+    image: docker:latest
+    pull: true
+    commands:
+      - docker build -t registry.cn-zhangjiakou.aliyuncs.com/abhors/demo:latest .
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
 
-      # 2. 将构建好的 JAR 文件打包为 Docker 镜像
-      - name: Docker 构建
-        image: docker:latest
-        pull: true
-        commands:
-          - docker build -t registry.cn-zhangjiakou.aliyuncs.com/abhors/demo:latest .
-        volumes:
-          - /var/run/docker.sock:/var/run/docker.sock # ⚠️ Docker in Docker 挂载
-
-      # 3. 将打包好的镜像推送到 Docker Hub
-      - name: 镜像推送
-        image: plugins/docker
-        settings:
-          # ⚠️ 关键配置：必须准确填写
-          repo: registry.cn-zhangjiakou.aliyuncs.com/abhors/demo
-          registry: registry.cn-zhangjiakou.aliyuncs.com
-          tags: latest
-          dockerfile: ./Dockerfile
-          username:
-            from_secret: docker_hub_user   # 从 Woodpecker UI 获取的 Docker Hub 用户名
-          password:
-            from_secret: docker_hub_pass   # 从 Woodpecker UI 获取的 Docker Hub 密码或 Token
+  - name: 镜像推送
+    image: plugins/docker
+    settings:
+      repo: registry.cn-zhangjiakou.aliyuncs.com/abhors/demo
+      tags: latest
+      registry: registry.cn-zhangjiakou.aliyuncs.com
+      username:
+        from_secret: aliyun_acr_username
+      password:
+        from_secret: aliyun_acr_password
