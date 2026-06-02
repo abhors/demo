@@ -10,7 +10,7 @@ steps:
       - /tmp/maven-cache:/root/.m2
     when:
       event: [push, pull_request]
-      branch: main
+      branch: master
 
   - name: 镜像构建与推送
     image: plugins/docker
@@ -26,4 +26,4 @@ steps:
       # 但需要确保服务器配置了 WOODPECKER_PLUGINS_PRIVILEGED=plugins/docker
     when:
       event: push
-      branch: main
+      branch: master
