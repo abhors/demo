@@ -13,7 +13,7 @@ steps:
       branch: master
 
   - name: 镜像构建与推送
-    image: woodpeckerplugins/docker:25.0.3
+    image: docker.m.daocloud.io/woodpeckerci/plugin-docker-buildx:latest
     settings:
       repo: registry.cn-zhangjiakou.aliyuncs.com/abhors/demo
       tags: latest
