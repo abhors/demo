@@ -3,3 +3,5 @@ your-app-name	你的 Java 应用对应的 Docker 镜像名称。	demo
 docker_username / docker_password	这是流水线中引用的密钥名称。你需要在 Woodpecker UI 的设置页面中，将你的 Docker Hub 真实凭证添加为这两个密钥，流水线才能访问它们。	在 UI 中配置
 /tmp/maven-cache:/root/.m2	Maven 缓存。将宿主机目录挂载到容器内，可以复用 Maven 本地仓库，加速构建。
 /var/run/docker.sock:/var/run/docker.sock	Docker socket 挂载。这允许流水线在容器内直接调用宿主机的 Docker 守护进程来构建镜像。
+
+1
