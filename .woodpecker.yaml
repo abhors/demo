@@ -14,8 +14,8 @@ steps:
 
   - name: 镜像构建与推送
     image: docker.m.daocloud.io/woodpeckerci/plugin-docker-buildx:latest
-#    volumes:
-#      - /var/run/docker.sock:/var/run/docker.sock
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     settings:
       repo: registry.cn-zhangjiakou.aliyuncs.com/abhors/demo
       tags: latest
