@@ -13,7 +13,7 @@ steps:
       branch: master
 
   - name: 镜像构建与推送
-    image: plugins/docker
+    image: woodpeckerplugins/docker:25.0.3
     settings:
       repo: registry.cn-zhangjiakou.aliyuncs.com/abhors/demo
       tags: latest
