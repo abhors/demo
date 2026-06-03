@@ -44,11 +44,7 @@ steps:
       REMOTE_HOST:
         from_secret: 136_ssh_host
     commands:
-      - export DOCKER_HOST="tcp://${REMOTE_HOST}:2375"
-      - echo "当前连接的远程宿主机是: $DOCKER_HOST"
-      - docker login --username "$ALIYUN_USER" --password "$ALIYUN_PASS" $ALIYUN_REGISTRY
-      - docker compose pull
-      - docker compose up -d
+      - export DOCKER_HOST="tcp://${REMOTE_HOST}:2375" && docker login --username "$ALIYUN_USER" --password "$ALIYUN_PASS" $ALIYUN_REGISTRY && docker compose pull && docker compose up -d
     when:
       event: [push, pull_request, manual]
       branch: master
