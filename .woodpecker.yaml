@@ -41,7 +41,16 @@ steps:
           insecure = true
       config: |
         {
-          "insecure-registries": ["push.lovestory.cyou"]
+          "registry-mirrors": [
+            "https://docker.1ms.run",
+            "https://dockerpull.org",
+            "https://1ms.run",
+            "https://docker.1panel.dev/"
+          ],
+          "insecure-registries": [
+            "registry.lovestory.cyou",
+            "push.lovestory.cyou"
+          ]
         }
     when:
       event: push
