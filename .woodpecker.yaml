@@ -46,9 +46,11 @@ steps:
         from_secret: 136_ssh_password
       port: 22
       command_timeout: 10m
-      # 👇 核心黑魔法：利用 SSH 远程执行本地的脚本文件
       script:
-        - bash -s < ./deploy.sh
+        - |
+          cat << 'EOF' | bash
+          $(cat ./deploy.sh)
+          EOF
     when:
       event: push
       branch: master
