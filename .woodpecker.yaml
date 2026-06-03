@@ -33,6 +33,23 @@ steps:
       event: push
       branch: master
 
+  - name: 传输部署脚本到远程
+    image: appleboy/drone-scp:latest
+    settings:
+      host:
+        from_secret: 136_ssh_host
+      username:
+        from_secret: 136_ssh_user
+      password:
+        from_secret: 136_ssh_password
+      port: 22
+      # 👇 把本地的 deploy.sh 传送到远程服务器的 /tmp 目录下
+      target: /tmp/
+      source: deploy.sh
+    when:
+      event: push
+      branch: master
+
   - name: 目标机器部署
     image: appleboy/drone-ssh:latest
     settings:
@@ -40,17 +57,14 @@ steps:
         from_secret: 136_ssh_host
       username:
         from_secret: 136_ssh_user
-#      key:
-#        from_secret: 136_ssh_key
       password:
         from_secret: 136_ssh_password
       port: 22
       command_timeout: 10m
+      # 👇 此时远程服务器上已经切切实实躺着这个脚本了，直接运行它！
       script:
-        - |
-          cat << 'EOF' | bash
-          $(cat ./deploy.sh)
-          EOF
+        - chmod +x /tmp/deploy.sh
+        - /tmp/deploy.sh
     when:
       event: push
       branch: master
