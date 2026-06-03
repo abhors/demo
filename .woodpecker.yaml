@@ -1,9 +1,14 @@
-# 第 90 次部署
-# 💡 全局变量块
+# 第 95 次部署
 variables:
-  - &APP_REGISTRY "push.lovestory.cyou"
-  - &APP_PULL_REGISTRY "registry.lovestory.cyou"
-  - &PROJECT_NAME "abhors/demo"
+  # --- 仓库与私服配置 ---
+  - &APP_REGISTRY "push.lovestory.cyou"                    # 推送镜像的私服域名
+  - &APP_PULL_REGISTRY "registry.lovestory.cyou"            # 拉取基础镜像的私服域名
+  - &PROJECT_NAME "abhors/demo"                            # 项目镜像路径与名称
+  - &PROJECT_PORT "8080"
+  - &FULL_PUSH_REPO "push.lovestory.cyou/abhors/demo"      # 拼接后的完整推送地址
+  - &FULL_PULL_REPO "push.lovestory.cyou/abhors/demo:latest" # 远程部署拉取的目标地址
+
+  # --- 部署目标机配置 ---
   - &CONTAINER_NAME "demo-container"
   - &DEPLOY_HOST "43.143.243.136"
   - &DEPLOY_PORT "22"
@@ -23,14 +28,13 @@ steps:
       branch: master
 
   - name: 官方标准构建与推送 (宿主机物理硬缓存版)
-    image: woodpeckerci/plugin-docker-buildx:latest-insecure
+    image: docker.m.daocloud.io/woodpeckerci/plugin-docker-buildx:latest-insecure
+    privileged: true
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-    privileged: true
     settings:
-      insecure: true
-      repo: push.lovestory.cyou/abhors/demo
-      registry: push.lovestory.cyou
+      repo: *FULL_PUSH_REPO
+      registry: *APP_REGISTRY
       username:
         from_secret: nexus_docker_username
       password:
@@ -50,16 +54,24 @@ steps:
       password:
         from_secret: *DEPLOY_PASS_SECRET
       secrets: [ nexus_docker_username, nexus_docker_password ]
-      envs: [ nexus_docker_username, nexus_docker_password ]
+      envs:
+        - nexus_docker_username
+        - nexus_docker_password
+        - DEPLOY_HOST=*DEPLOY_HOST
+        - CONTAINER_NAME=*CONTAINER_NAME
+        - FULL_PULL_REPO=*FULL_PULL_REPO
+        - APP_REGISTRY=*APP_REGISTRY
+        - PROJECT_PORT=*PROJECT_PORT
+
       script:
         - echo "========================================="
-        - echo "🚀 开始部署节点：*DEPLOY_HOST"
+        - echo "🚀 开始部署节点：$DEPLOY_HOST"
         - echo "========================================="
-        - docker login --username "$nexus_docker_username" --password "$nexus_docker_password" "push.lovestory.cyou"
-        - docker stop "demo-container" || true
-        - docker rm "demo-container" || true
-        - docker pull "push.lovestory.cyou/abhors/demo:latest"
-        - docker run -d --name "demo-container" -p 8080:8080 --restart always "push.lovestory.cyou/abhors/demo:latest"
+        - docker login --username "$nexus_docker_username" --password "$nexus_docker_password" "$APP_REGISTRY"
+        - docker stop "$CONTAINER_NAME" || true
+        - docker rm "$CONTAINER_NAME" || true
+        - docker pull "$FULL_PULL_REPO"
+        - docker run -d --name "$CONTAINER_NAME" -p "$PROJECT_PORT":"$PROJECT_PORT" --restart always "$FULL_PULL_REPO"
     when:
       event: push
       branch: master
