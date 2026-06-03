@@ -35,9 +35,29 @@ steps:
       password:
         from_secret: nexus_docker_password
       # 👇 核心修改 2：显式指定构建输出模式为常规 image 模式并直接 push
-      # 这样可以强行阻止 Buildx 启动独立的隔离容器，从而彻底不走官方下载 moby/buildkit 的代码链
+
       # 强行把 Buildx 启动时要拉取的镜像，换成你自己的私有仓库（或者是你配置过镜像加速能拉到的地方）
       buildkit_driveropt: image=push.lovestory.cyou/moby/buildkit:buildx-stable-1
+      # 这样可以强行阻止 Buildx 启动独立的隔离容器，从而彻底不走官方下载 moby/buildkit 的代码链
+      output: type=image,push=true
+      # 👇 2. 核心：完全对齐官方不安全设置文档，强制 BuildKit 放行纯 HTTP
+      buildkit_config: |
+        [registry."push.lovestory.cyou"]
+          http = true
+          insecure = true
+      config: |
+        {
+          "registry-mirrors": [
+            "https://docker.1ms.run",
+            "https://dockerpull.org",
+            "https://1ms.run",
+            "https://docker.1panel.dev/"
+          ],
+          "insecure-registries": [
+            "registry.lovestory.cyou",
+            "push.lovestory.cyou"
+          ]
+        }
     when:
       event: push
       branch: master
