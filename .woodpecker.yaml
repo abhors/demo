@@ -5,7 +5,6 @@ steps:
     pull: true
     commands:
       - mvn clean package -DskipTests
-    # 注意：使用 volumes 必须在 Web UI 中开启 "Trusted" 权限
     volumes:
       - /tmp/maven-cache:/root/.m2
     when:
@@ -24,22 +23,13 @@ steps:
         from_secret: aliyun_acr_username
       password:
         from_secret: aliyun_acr_password
-      # 👇 核心：为其指定一个绝对能稳定拉取三方大类目的镜像加速源
-      # 这样当它去找 moby/buildkit 时，会自动走大厂的代理通道，100% 不会超时
       mirror: https://docker.m.daocloud.io
-      # 很多时候 plugins/docker 内部默认会处理 context，不需要你手动挂载 docker.sock
-      # 但需要确保服务器配置了 WOODPECKER_PLUGINS_PRIVILEGED=plugins/docker
     when:
       event: push
       branch: master
 
   - name: 远程终端部署
     image: appleboy/drone-ssh
-    environment:
-      MY_ALIYUN_USER:
-        from_secret: aliyun_acr_username
-      MY_ALIYUN_PASS:
-        from_secret: aliyun_acr_password
     settings:
       host:
         from_secret: 136_ssh_host
@@ -48,20 +38,19 @@ steps:
       password:
         from_secret: 136_ssh_password
       port: 22
-      # 👇 核心安全通道：告诉插件，把上面的这两个变量强行带到远程 136 服务器的终端里去！
-      envs: [ MY_ALIYUN_USER, MY_ALIYUN_PASS ]
+      # 👇 完美修复 1：彻底干掉外层的 environment！
+      # 直接使用插件原生的 secrets 属性，安全导入系统里的这两个密文
+      secrets: [ aliyun_acr_username, aliyun_acr_password ]
+      # 👇 完美修复 2：告诉插件，在通过 SSH 连上 136 后，把上面这两个官方变量注入到远程终端里
+      envs: [ aliyun_acr_username, aliyun_acr_password ]
       script:
-        # 1. 在 136 本地直接登录阿里云。因为变量被 envs 成功带过去了，这次绝对是真实的值！
-        - docker login --username "$MY_ALIYUN_USER" --password "$MY_ALIYUN_PASS" registry.cn-zhangjiakou.aliyuncs.com
-
-        # 2. 清理远程旧容器（防止重名冲突，加 || true 防止第一次找不到报错）
+        # 注意：因为使用的是 secrets 原生注入，远程终端里的变量名直接叫 $aliyun_acr_username 和 $aliyun_acr_password
+        - docker login --username "$aliyun_acr_username" --password "$aliyun_acr_password" registry.cn-zhangjiakou.aliyuncs.com
         - docker stop demo-container || true
         - docker rm demo-container || true
-
-        # 3. 远程本土拉取最新镜像
         - docker pull registry.cn-zhangjiakou.aliyuncs.com/abhors/demo:latest
-
-        # 4. 直接原生 docker run 轰起来！不需要任何额外文件，不需要 compose
         - docker run -d --name demo-container -p 8080:8080 --restart always registry.cn-zhangjiakou.aliyuncs.com/abhors/demo:latest
-
-
+    # 👇 完美修复 3：补上 when 过滤条件，消除 bad_habit 警告
+    when:
+      event: push
+      branch: master
