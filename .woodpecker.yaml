@@ -1,7 +1,23 @@
 # .woodpecker.yaml
+
+# 🛑 终极完全体开关：无论项目、私服、部署机器怎么变，只改这 6 行！
+environment:
+  # 1. 业务与私服配置（已换成本地真实自建域名）
+  APP_REGISTRY: "push.lovestory.cyou"     # 👈 镜像推送走专属通道
+  APP_PULL_REGISTRY: "registry.lovestory.cyou" # 👈 远程136机器拉取走加速总门户
+  PROJECT_NAME: "abhors/demo"
+  CONTAINER_NAME: "demo-container"
+
+  # 2. 远程部署机器配置
+  DEPLOY_HOST: "43.143.243.136"        # 👈 你的腾讯云 136 服务器 IP
+  DEPLOY_PORT: 22                      # 👈 SSH 端口
+  DEPLOY_USER_SECRET: "136_ssh_user"   # 👈 对应系统 Secret 里的用户名别名
+  DEPLOY_PASS_SECRET: "136_ssh_password" # 👈 对应系统 Secret 里的密码别名
+
 steps:
   - name: Java 构建
-    image: docker.m.daocloud.io/library/maven:3.9.6-eclipse-temurin-17
+    # 💡 隐式拦截：这里不加任何域名，Woodpecker宿主机会通过本地daemon.json自动走registry.lovestory.cyou下载并秒级缓存
+    image: library/maven:3.9.6-eclipse-temurin-17
     pull: true
     commands:
       - mvn clean package -DskipTests
@@ -12,45 +28,45 @@ steps:
       branch: master
 
   - name: 镜像构建与推送
-    image: docker.m.daocloud.io/woodpeckerci/plugin-docker-buildx:latest
+    image: woodpeckerci/plugin-docker-buildx:latest
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     settings:
-      repo: registry.cn-zhangjiakou.aliyuncs.com/abhors/demo
-      tags: latest
-      registry: registry.cn-zhangjiakou.aliyuncs.com
+      repo: ${APP_REGISTRY}/${PROJECT_NAME}
+      registry: ${APP_REGISTRY}
       username:
-        from_secret: aliyun_acr_username
+        from_secret: nexus_docker_username
       password:
-        from_secret: aliyun_acr_password
-      mirror: https://docker.m.daocloud.io
+        from_secret: nexus_docker_password
     when:
       event: push
       branch: master
 
   - name: 远程终端部署
-    image: appleboy/drone-ssh
+    # 💡 完美闭环：这里直接走你的私服拉取，刚才通过 1ms 毫秒源缓存下来的插件，这里将是“秒拉”
+    image: registry.lovestory.cyou/appleboy/drone-ssh:latest
     settings:
-      host:
-        from_secret: 136_ssh_host
+      host: ${DEPLOY_HOST}
+      port: ${DEPLOY_PORT}
       username:
-        from_secret: 136_ssh_user
+        from_secret: ${DEPLOY_USER_SECRET}
       password:
-        from_secret: 136_ssh_password
-      port: 22
-      # 👇 完美修复 1：彻底干掉外层的 environment！
-      # 直接使用插件原生的 secrets 属性，安全导入系统里的这两个密文
-      secrets: [ aliyun_acr_username, aliyun_acr_password ]
-      # 👇 完美修复 2：告诉插件，在通过 SSH 连上 136 后，把上面这两个官方变量注入到远程终端里
-      envs: [ aliyun_acr_username, aliyun_acr_password ]
+        from_secret: ${DEPLOY_PASS_SECRET}
+
+      # 安全传递与跨网传输
+      secrets: [ nexus_docker_username, nexus_docker_password ]
+      envs: [ nexus_docker_username, nexus_docker_password, APP_REGISTRY, APP_PULL_REGISTRY, PROJECT_NAME, CONTAINER_NAME ]
       script:
-        # 注意：因为使用的是 secrets 原生注入，远程终端里的变量名直接叫 $aliyun_acr_username 和 $aliyun_acr_password
-        - docker login --username "$aliyun_acr_username" --password "$aliyun_acr_password" registry.cn-zhangjiakou.aliyuncs.com
-        - docker stop demo-container || true
-        - docker rm demo-container || true
-        - docker pull registry.cn-zhangjiakou.aliyuncs.com/abhors/demo:latest
-        - docker run -d --name demo-container -p 8080:8080 --restart always registry.cn-zhangjiakou.aliyuncs.com/abhors/demo:latest
-    # 👇 完美修复 3：补上 when 过滤条件，消除 bad_habit 警告
+        - echo "========================================="
+        - echo "🚀 开始部署节点：${DEPLOY_HOST}"
+        - echo "========================================="
+        # 📦 远程 136 机器由于通过 Group 组仓（registry.）更能享受到本地缓存的红利
+        - docker login --username "$nexus_docker_username" --password "$nexus_docker_password" "$APP_PULL_REGISTRY"
+        - docker stop "$CONTAINER_NAME" || true
+        - docker rm "$CONTAINER_NAME" || true
+        # 💡 细节优化：136机器拉取时，由于你的Hosted仓已经聚合在Group仓里，所以136直接走registry.lovestory.cyou拉取即可
+        - docker pull "$APP_PULL_REGISTRY"/"$PROJECT_NAME":latest
+        - docker run -d --name "$CONTAINER_NAME" -p 8080:8080 --restart always "$APP_PULL_REGISTRY"/"$PROJECT_NAME":latest
     when:
       event: push
       branch: master
