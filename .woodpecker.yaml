@@ -23,7 +23,7 @@ steps:
 
   - name: 镜像构建与推送
     # 👇 1. 核心：必须换成官方文档指定的 -insecure 后缀镜像
-    image: woodpeckerci/plugin-docker-buildx:latest-insecure
+    image: registry.lovestory.cyou/woodpeckerci/plugin-docker-buildx:latest-insecure
     privileged: true
     settings:
       repo: push.lovestory.cyou/abhors/demo
