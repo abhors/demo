@@ -42,10 +42,11 @@ steps:
         from_secret: aliyun_acr_password
       DOCKER_HOST: tcp://136_ssh_host:2375
       commands:
+        - echo "$ALIYUN_USER" "$ALIYUN_PASS" $ALIYUN_REGISTRY
         # 👉 顺手帮你把不安全的 echo 管道改成了安全的官方原生参数
         - docker login --username "$ALIYUN_USER" --password "$ALIYUN_PASS" $ALIYUN_REGISTRY
         - docker compose pull
         - docker compose up -d
     when:
-      event: push
+      event: [push, pull_request, manual]
       branch: master
