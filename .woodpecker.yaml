@@ -22,20 +22,42 @@ steps:
       event: [push, pull_request]
       branch: master
 
-  - name: 镜像构建与推送
-    # 👇 1. 核心：必须换成官方文档指定的 -insecure 后缀镜像
+  - name: 官方标准构建与推送 (DinD)
     image: woodpeckerci/plugin-docker-buildx:latest-insecure
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    privileged: true
+    privileged: true # 👈 官方 DinD 模式必须开启特权
     settings:
       repo: push.lovestory.cyou/abhors/demo
-      insecure: true # 这个是给内部 dockerd 用的
       registry: push.lovestory.cyou
+      insecure: true
       username:
         from_secret: nexus_docker_username
       password:
         from_secret: nexus_docker_password
+      output: type=image,push=true
+
+      # 💡 官方标准解法 1：把国内加速源灌进内部的 BuildKit 编译器
+      # 这样它在解析 Dockerfile 里的 FROM 基础镜像时，才不会去连外网
+      buildkit_config: |
+        [registry."docker.io"]
+          mirrors = ["docker.1ms.run", "dockerpull.org", "1ms.run"]
+        [registry."push.lovestory.cyou"]
+          http = true
+          insecure = true
+
+      # 💡 官方标准解法 2：把国内加速源灌进外层的 Docker 守护进程
+      # 这样它在第一步启动时，就能通过国内镜像秒拉 moby/buildkit，绝不超时
+      config: |
+        {
+          "registry-mirrors": [
+            "https://docker.1ms.run",
+            "https://dockerpull.org",
+            "https://1ms.run"
+          ],
+          "insecure-registries": [
+            "registry.lovestory.cyou",
+            "push.lovestory.cyou"
+          ]
+        }
     when:
       event: push
       branch: master
