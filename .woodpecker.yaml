@@ -1,4 +1,4 @@
-# 💡 全局变量块 55
+# 💡 全局变量块 61
 variables:
   - &APP_REGISTRY "push.lovestory.cyou"
   - &APP_PULL_REGISTRY "registry.lovestory.cyou"
