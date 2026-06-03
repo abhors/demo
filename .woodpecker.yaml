@@ -1,6 +1,6 @@
 # .woodpecker.yaml
 
-# 💡 全局变量块 44
+# 💡 全局变量块 45
 variables:
   - &APP_REGISTRY "push.lovestory.cyou"
   - &APP_PULL_REGISTRY "registry.lovestory.cyou"
