@@ -36,6 +36,7 @@ steps:
       # 💡 完美拼接：此时可以使用标准的系统变量拼接，完美通过 Linter！
       repo: ${REGISTRY_DOMAIN}/${PROJECT_PATH}
       registry: *APP_REGISTRY
+      insecure: true
       username:
         from_secret: nexus_docker_username
       password:
