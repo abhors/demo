@@ -1,4 +1,5 @@
-# 💡 全局变量块 61
+# 第 62 次部署
+# 💡 全局变量块
 variables:
   - &APP_REGISTRY "push.lovestory.cyou"
   - &APP_PULL_REGISTRY "registry.lovestory.cyou"
@@ -23,7 +24,7 @@ steps:
 
   - name: 镜像构建与推送
     # 👇 1. 核心：必须换成官方文档指定的 -insecure 后缀镜像
-    image: registry.lovestory.cyou/woodpeckerci/plugin-docker-buildx:latest-insecure
+    image: woodpeckerci/plugin-docker-buildx:latest-insecure
     privileged: true
     settings:
       repo: push.lovestory.cyou/abhors/demo
