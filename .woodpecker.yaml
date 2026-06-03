@@ -1,5 +1,3 @@
-# .woodpecker.yaml
-
 # 💡 全局变量块 46
 variables:
   - &APP_REGISTRY "push.lovestory.cyou"
@@ -26,27 +24,13 @@ steps:
   - name: 镜像构建与推送
     image: woodpeckerci/plugin-docker-buildx:latest
     privileged: true
-    environment:
-      REGISTRY_DOMAIN: *APP_REGISTRY
-      PROJECT_PATH: *PROJECT_NAME
+    # ❌ 删除了这里的 environment 块，避免与 settings 冲突
     settings:
-      repo: ${REGISTRY_DOMAIN}/${PROJECT_PATH}
+      #  直接使用 YAML 锚点组合成完整的 repo 地址
+      repo: push.lovestory.cyou/abhors/demo
       # 💡 文档高级配置：通知内部 dockerd 引擎全面放开对不安全 HTTP 仓库的拦截
       insecure: true
-      # 💡 官方文档标准语法：改用新版 logins 数组来显式声明私服的登录凭证
-#      logins:
-#        - registry: "http://push.lovestory.cyou"  # 👈 显式加上 http://，强制按纯 HTTP 协议走
-#          username:
-#            from_secret: nexus_docker_username
-#          password:
-#            from_secret: nexus_docker_password
-#      registry: "http://push.lovestory.cyou"  # 👈 显式加上 http://，强制按纯 HTTP 协议走
-#      username:
-#        from_secret: nexus_docker_username
-#      password:
-#        from_secret: nexus_docker_password
-#      repo: ${APP_REGISTRY}/${PROJECT_NAME}
-      registry: ${APP_REGISTRY}
+      registry: *APP_REGISTRY
       username:
         from_secret: nexus_docker_username
       password:
