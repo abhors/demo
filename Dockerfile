@@ -1,5 +1,5 @@
-FROM registry.cn-zhangjiakou.aliyuncs.com/abhors/ibm-semeru-runtimes:open-17-jre
-#FROM ibm-semeru-runtimes:open-17-jre
+#FROM registry.cn-zhangjiakou.aliyuncs.com/abhors/ibm-semeru-runtimes:open-17-jre
+FROM ibm-semeru-runtimes:open-17-jre
 COPY ./target/*.jar /opt/app.jar
 #暴露端口
 EXPOSE 8080
