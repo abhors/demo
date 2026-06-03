@@ -22,20 +22,26 @@ steps:
       branch: master
 
   - name: 镜像构建与推送
-    image: woodpeckerci/plugin-docker-buildx:latest
+    # 👇 1. 核心：必须换成官方文档指定的 -insecure 后缀镜像
+    image: woodpeckerci/plugin-docker-buildx:latest-insecure
     privileged: true
-    # ❌ 删除了这里的 environment 块，避免与 settings 冲突
     settings:
-      #  直接使用 YAML 锚点组合成完整的 repo 地址
       repo: push.lovestory.cyou/abhors/demo
-      # 💡 文档高级配置：通知内部 dockerd 引擎全面放开对不安全 HTTP 仓库的拦截
-      insecure: true
+      insecure: true # 这个是给内部 dockerd 用的
       registry: *APP_REGISTRY
       username:
         from_secret: nexus_docker_username
       password:
         from_secret: nexus_docker_password
-      mirror: http://registry.lovestory.cyou
+
+      # 👇 2. 核心：完全对齐官方不安全设置文档，强制 BuildKit 放行纯 HTTP
+      buildkit_config: |
+        [registry."registry.lovestory.cyou"]
+          http = true
+          insecure = true
+        [registry."push.lovestory.cyou"]
+          http = true
+          insecure = true
     when:
       event: push
       branch: master
