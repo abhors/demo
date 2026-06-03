@@ -8,6 +8,9 @@ steps:
     # 注意：使用 volumes 必须在 Web UI 中开启 "Trusted" 权限
     volumes:
       - /tmp/maven-cache:/root/.m2
+    when:
+      event: [push, pull_request]
+      branch: master
 
   - name: 镜像构建与推送
     image: docker.m.daocloud.io/woodpeckerci/plugin-docker-buildx:latest
@@ -26,10 +29,20 @@ steps:
       mirror: https://docker.m.daocloud.io
       # 很多时候 plugins/docker 内部默认会处理 context，不需要你手动挂载 docker.sock
       # 但需要确保服务器配置了 WOODPECKER_PLUGINS_PRIVILEGED=plugins/docker
-  - name: 远程 Docker Compose 部署
-    image: docker.m.daocloud.io/appleboy/drone-docker-compose:latest
+    when:
+      event: push
+      branch: master
+
+  # 第三步：抛弃所有不靠谱的 docker:cli 和 compose 插件，直接走纯 SSH 本土命令流
+  - name: 远程终端闭环部署 (纯命令直接冲)
+    image: docker.m.daocloud.io/appleboy/drone-ssh:latest
+    environment:
+      # 👇 先把 Woodpecker 的 Secret 塞进临时环境变量里
+      MY_ALIYUN_USER:
+        from_secret: aliyun_acr_username
+      MY_ALIYUN_PASS:
+        from_secret: aliyun_acr_password
     settings:
-      # 1. 远程 136 服务器的信息（直接从你的 Secret 里读，插件自己会去连 22 端口，不需要你开 2375 端口了！）
       host:
         from_secret: 136_ssh_host
       username:
@@ -37,18 +50,20 @@ steps:
       password:
         from_secret: 136_ssh_password
       port: 22
+      # 👇 核心安全通道：告诉插件，把上面的这两个变量强行带到远程 136 服务器的终端里去！
+      envs: [ MY_ALIYUN_USER, MY_ALIYUN_PASS ]
+      script:
+        # 1. 在 136 本地直接登录阿里云。因为变量被 envs 成功带过去了，这次绝对是真实的值！
+        - docker login --username "$MY_ALIYUN_USER" --password "$MY_ALIYUN_PASS" registry.cn-zhangjiakou.aliyuncs.com
 
-      # 2. 阿里云私有镜像仓库的鉴权（插件在远程拉取前，会自动在远程帮你搞定 docker login）
-      registry: registry.cn-zhangjiakou.aliyuncs.com
-      username_registry:
-        from_secret: aliyun_acr_username
-      password_registry:
-        from_secret: aliyun_acr_password
+        # 2. 清理远程旧容器（防止重名冲突，加 || true 防止第一次找不到报错）
+        - docker stop demo-container || true
+        - docker rm demo-container || true
 
-      # 3. 告诉插件：你的 docker-compose.yaml 文件在哪里（它会自动读取并同步到远程执行）
-      compose: docker-compose.yaml
+        # 3. 远程本土拉取最新镜像
+        - docker pull registry.cn-zhangjiakou.aliyuncs.com/abhors/demo:latest
 
-      # 4. 相当于执行 docker compose up -d --pull --force-recreate
-      pull: true
-      recreate:
-        true
+        # 4. 直接原生 docker run 轰起来！不需要任何额外文件，不需要 compose
+        - docker run -d --name demo-container -p 8080:8080 --restart always registry.cn-zhangjiakou.aliyuncs.com/abhors/demo:latest
+
+
