@@ -44,10 +44,8 @@ steps:
       REMOTE_HOST:
         from_secret: 136_ssh_host
     commands:
-      # 👇 2. 在这里动态拼接成完整的 tcp://IP:2375 赋值给 DOCKER_HOST
       - export DOCKER_HOST="tcp://${REMOTE_HOST}:2375"
-
-      # 以下命令保持不变
+      - echo "当前连接的远程宿主机是: $DOCKER_HOST"
       - docker login --username "$ALIYUN_USER" --password "$ALIYUN_PASS" $ALIYUN_REGISTRY
       - docker compose pull
       - docker compose up -d
