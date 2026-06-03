@@ -83,7 +83,7 @@ steps:
         - echo "========================================="
 
         # 所有的参数均在远程机器通过系统大写变量精准传参
-        - docker login --username "$NEXUS_DOCKER_USERNAME" --password "$NEXUS_DOCKER_PASSWORD" "$APP_REGISTRY"
+        - docker login --username "$nexus_docker_username" --password "$nexus_docker_password" "$APP_REGISTRY"
         - docker stop "$CONTAINER_NAME" || true
         - docker rm "$CONTAINER_NAME" || true
         - docker pull "$FULL_PULL_REPO"
