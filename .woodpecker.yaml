@@ -41,7 +41,7 @@ steps:
       branch: master
 
   - name: 远程终端部署
-    image: push.lovestory.cyou/appleboy/drone-ssh:latest
+    image: registry.lovestory.cyou/appleboy/drone-ssh:latest
     settings:
       host: *DEPLOY_HOST
       port: *DEPLOY_PORT
