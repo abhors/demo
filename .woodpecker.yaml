@@ -36,12 +36,12 @@ steps:
     image: docker.m.daocloud.io/library/docker:cli
     environment:
       # 1. 从 Secret 动态读取你的阿里云 ACR 凭证
-      - ALIYUN_REGISTRY=registry.cn-zhangjiakou.aliyuncs.com
+      - ALIYUN_REGISTRY: registry.cn-zhangjiakou.aliyuncs.com
       - ALIYUN_USER:
         from_secret: aliyun_acr_username
       - ALIYUN_PASS:
         from_secret: aliyun_acr_password
-      - DOCKER_HOST=tcp://136_ssh_host:2375
+      - DOCKER_HOST: tcp://136_ssh_host:2375
     commands:
       # 👉 核心操作 1：命令远程服务器登录阿里云，彻底解决之前 pull access denied 报错
       - echo "$ALIYUN_PASS" | docker login --username "$ALIYUN_USER" --password-stdin $ALIYUN_REGISTRY
