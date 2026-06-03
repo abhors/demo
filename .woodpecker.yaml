@@ -26,21 +26,22 @@ steps:
   - name: 镜像构建与推送
     image: woodpeckerci/plugin-docker-buildx:latest
     privileged: true
-    # 💡 解决方案：通过 environment 将锚点转化为当前步骤的环境变量
     environment:
       REGISTRY_DOMAIN: *APP_REGISTRY
       PROJECT_PATH: *PROJECT_NAME
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
     settings:
-      # 💡 完美拼接：此时可以使用标准的系统变量拼接，完美通过 Linter！
       repo: ${REGISTRY_DOMAIN}/${PROJECT_PATH}
-      registry: *APP_REGISTRY
+
+      # 💡 文档高级配置：通知内部 dockerd 引擎全面放开对不安全 HTTP 仓库的拦截
       insecure: true
-      username:
-        from_secret: nexus_docker_username
-      password:
-        from_secret: nexus_docker_password
+
+      # 💡 官方文档标准语法：改用新版 logins 数组来显式声明私服的登录凭证
+      logins:
+        - registry: "http://push.lovestory.cyou"  # 👈 显式加上 http://，强制按纯 HTTP 协议走
+          username:
+            from_secret: nexus_docker_username
+          password:
+            from_secret: nexus_docker_password
     when:
       event: push
       branch: master
