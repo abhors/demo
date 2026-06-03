@@ -1,4 +1,4 @@
-# 第 73 次部署
+# 第 74 次部署
 # 💡 全局变量块
 variables:
   - &APP_REGISTRY "push.lovestory.cyou"
@@ -24,7 +24,7 @@ steps:
 
   - name: 官方标准构建与推送 (DinD)
     image: woodpeckerci/plugin-docker-buildx:latest-insecure
-    privileged: true # 👈 官方 DinD 模式必须开启特权
+    privileged: true
     settings:
       repo: push.lovestory.cyou/abhors/demo
       registry: push.lovestory.cyou
@@ -35,35 +35,24 @@ steps:
         from_secret: nexus_docker_password
       output: type=image,push=true
 
-      # 💡 官方标准解法 1：把国内加速源灌进内部的 BuildKit 编译器
-      # 这样它在解析 Dockerfile 里的 FROM 基础镜像时，才不会去连外网
+      # 💡 官方高级设置：唯一承认的加速器参数，名字就叫 mirror
+      # 这行会让插件拼接出 dockerd --registry-mirror=... 从而秒拉底座，不再超时
+      mirror: http://registry.lovestory.cyou
+
+      # 💡 内部 BuildKit 编译器的加速器配置
+      # 确保第二步解析 Dockerfile 里的 FROM 基础镜像时走国内源
       buildkit_config: |
         [registry."docker.io"]
           mirrors = ["docker.1ms.run", "dockerpull.org", "1ms.run"]
         [registry."push.lovestory.cyou"]
           http = true
           insecure = true
-
-      # 💡 官方标准解法 2：把国内加速源灌进外层的 Docker 守护进程
-      # 这样它在第一步启动时，就能通过国内镜像秒拉 moby/buildkit，绝不超时
-      config: |
-        {
-          "registry-mirrors": [
-            "https://docker.1ms.run",
-            "https://dockerpull.org",
-            "https://1ms.run"
-          ],
-          "insecure-registries": [
-            "registry.lovestory.cyou",
-            "push.lovestory.cyou"
-          ]
-        }
     when:
       event: push
       branch: master
 
   - name: 远程终端部署
-    image: registry.lovestory.cyou/appleboy/drone-ssh:latest
+    image: push.lovestory.cyou/appleboy/drone-ssh:latest
     settings:
       host: *DEPLOY_HOST
       port: *DEPLOY_PORT
