@@ -8,9 +8,6 @@ steps:
     # 注意：使用 volumes 必须在 Web UI 中开启 "Trusted" 权限
     volumes:
       - /tmp/maven-cache:/root/.m2
-    when:
-      event: [push, pull_request]
-      branch: master
 
   - name: 镜像构建与推送
     image: docker.m.daocloud.io/woodpeckerci/plugin-docker-buildx:latest
@@ -29,9 +26,6 @@ steps:
       mirror: https://docker.m.daocloud.io
       # 很多时候 plugins/docker 内部默认会处理 context，不需要你手动挂载 docker.sock
       # 但需要确保服务器配置了 WOODPECKER_PLUGINS_PRIVILEGED=plugins/docker
-    when:
-      event: push
-      branch: master
   - name: 远程 Docker Compose 部署
     image: docker.m.daocloud.io/appleboy/drone-docker-compose:latest
     settings:
@@ -58,6 +52,3 @@ steps:
       pull: true
       recreate:
         true
-    when:
-      event: [push, pull_request]
-      branch: master
