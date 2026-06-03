@@ -33,18 +33,31 @@ steps:
       event: push
       branch: master
   - name: 远程 Docker Compose 部署
-    image: docker.m.daocloud.io/library/docker:cli
-    environment:
-      ALIYUN_REGISTRY: registry.cn-zhangjiakou.aliyuncs.com
-      ALIYUN_USER:
-        from_secret: aliyun_acr_username
-      ALIYUN_PASS:
-        from_secret: aliyun_acr_password
-      # 👇 1. 先把 Secret 里的远程服务器 IP 读取到一个临时变量里
-      REMOTE_HOST:
+    image: docker.m.daocloud.io/appleboy/drone-docker-compose:latest
+    settings:
+      # 1. 远程 136 服务器的信息（直接从你的 Secret 里读，插件自己会去连 22 端口，不需要你开 2375 端口了！）
+      host:
         from_secret: 136_ssh_host
-    commands:
-      - export DOCKER_HOST="tcp://${REMOTE_HOST}:2375" && docker login --username "$ALIYUN_USER" --password "$ALIYUN_PASS" $ALIYUN_REGISTRY && docker compose pull && docker compose up -d
+      username:
+        from_secret: 136_ssh_user
+      password:
+        from_secret: 136_ssh_password
+      port: 22
+
+      # 2. 阿里云私有镜像仓库的鉴权（插件在远程拉取前，会自动在远程帮你搞定 docker login）
+      registry: registry.cn-zhangjiakou.aliyuncs.com
+      username_registry:
+        from_secret: aliyun_acr_username
+      password_registry:
+        from_secret: aliyun_acr_password
+
+      # 3. 告诉插件：你的 docker-compose.yaml 文件在哪里（它会自动读取并同步到远程执行）
+      compose: docker-compose.yaml
+
+      # 4. 相当于执行 docker compose up -d --pull --force-recreate
+      pull: true
+      recreate:
+        true
     when:
       event: [push, pull_request, manual]
       branch: master
