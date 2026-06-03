@@ -24,18 +24,25 @@ steps:
 
   - name: 官方标准构建与推送 (宿主机物理硬缓存版)
     image: woodpeckerci/plugin-docker-buildx:latest-insecure
-    privileged: true
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     settings:
       repo: push.lovestory.cyou/abhors/demo
       registry: push.lovestory.cyou
-      insecure: true
       username:
         from_secret: nexus_docker_username
       password:
         from_secret: nexus_docker_password
       mirror: http://registry.lovestory.cyou
+      buildkit_config: |
+        [registry."docker.io"]
+          mirrors = ["docker.1ms.run", "dockerpull.org", "1ms.run"]
+        [registry."push.lovestory.cyou"]
+          http = true
+          insecure = true
+        [registry."registry.lovestory.cyou"]
+          http = true
+          insecure = true
     when:
       event: push
       branch: master
