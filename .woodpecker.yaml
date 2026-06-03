@@ -26,7 +26,9 @@ steps:
     image: woodpeckerci/plugin-docker-buildx:latest-insecure
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    privileged: true
     settings:
+      insecure: true
       repo: push.lovestory.cyou/abhors/demo
       registry: push.lovestory.cyou
       username:
