@@ -1,0 +1,14 @@
+services:
+  nexus:
+    image: sonatype/nexus3:latest
+    container_name: nexus
+    restart: always
+    ports:
+      - "8081:8081"
+      - "8082:8082"
+      - "8083:8083"
+    volumes:
+      - ./nexus-data:/nexus-data
+    environment:
+      # Nexus 默认比较吃内存，如果服务器配置有限，建议限制其 JVM 内存，1G~2G 即可
+      - INSTALL4J_ADD_VM_PARAMS=-Xms1g -Xmx1g -XX:MaxDirectMemorySize=1g

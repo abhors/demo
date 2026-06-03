@@ -1,0 +1,32 @@
+server {
+    listen 80;
+    server_name push.lovestory.cyou;
+    
+    # 💡 顺手把所有的 80 纯 HTTP 流量全部强转到 443 HTTPS，彻底顺了 BuildKit 的心愿
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl; # 👈 开启正规的 SSL 监听，满足它的 HTTPS 强迫症
+    server_name push.lovestory.cyou;
+
+    # 💡 挂载刚才生成的自签名证书
+    ssl_certificate /etc/nginx/cert/push.lovestory.cyou.pem;
+    ssl_certificate_key /etc/nginx/cert/push.lovestory.cyou.key;
+
+    # 优化配置，防止大镜像层上传超时或被拦截
+    client_max_body_size 0;
+    chunked_transfer_encoding on;
+
+    location / {
+        # 💡 这里填写你 Nexus 服务的真实本地内网地址和端口（比如 8081）
+        proxy_pass http://10.2.0.14:8083; 
+        
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        
+        # 💡 极其重要：告诉后端的 Nexus，现在前端套了 HTTPS，让 Nexus 别乱报异常
+        proxy_set_header X-Forwarded-Proto https; 
+    }
+}

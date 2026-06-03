@@ -1,0 +1,20 @@
+#docker-compose.yml
+services:
+  gitea:
+    image: gitea/gitea:1.21.7
+    container_name: gitea
+    restart: always
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+      - GITEA__server__DOMAIN=gitea.lovestory.cyou
+      - GITEA__server__SSH_DOMAIN=gitea.lovestory.cyou
+      - GITEA__server__ROOT_URL=http://gitea.lovestory.cyou/
+    volumes:
+      # 所有代码、用户数据、自带的 SQLite 数据库文件，全都会存在本地的 ./gitea-data 文件夹里
+      - ./gitea-data:/data
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - "3000:3000" # 网页访问端口
+      - "2222:22"   # SSH 克隆代码端口

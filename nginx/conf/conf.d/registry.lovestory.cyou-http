@@ -1,0 +1,15 @@
+server {
+    listen       80;
+    server_name  registry.lovestory.cyou; # 👈 走纯 HTTP
+
+    # 🚨 极其重要：解除 Nginx 默认的 1M 上传限制
+    client_max_body_size 0;
+
+    location / {
+        proxy_pass http://10.2.0.14:8082; # 转发到 Nexus 组仓库端口
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme; # 自动适配当前协议
+    }
+}

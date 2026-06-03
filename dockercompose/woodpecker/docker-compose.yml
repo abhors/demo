@@ -1,0 +1,47 @@
+services:
+  woodpecker-server:
+    image: woodpeckerci/woodpecker-server:v3
+    ports:
+      - 8000:8000
+    volumes:
+      - woodpecker-server-data:/var/lib/woodpecker/
+    restart: always
+    environment:
+      - WOODPECKER_OPEN=true
+      - WOODPECKER_HOST=https://lovestory.cyou
+      # 👇 加上这行，把 abhors 换成你真正的 GitHub 用户名（注意大小写敏感）
+      - WOODPECKER_ADMIN=abhors
+      - WOODPECKER_AGENT_SECRET=2f26c6a0e97e00c65a9e89fc39a95be532c19cb600c53fa555eada297c3569cb
+      #      - WOODPECKER_GITHUB=true
+      #      - WOODPECKER_GITHUB_CLIENT=Ov23liStAMZlR7jk5kiT
+      #      - WOODPECKER_GITHUB_SECRET=2157f7be71f2a6c91d6a859c622a29b1e1af3951
+
+      - WOODPECKER_GITEA=true
+      - WOODPECKER_GITEA_URL=http://gitea.lovestory.cyou
+      - WOODPECKER_GITEA_CLIENT=718dc249-2edc-4edd-8bc9-06ba569c2007
+      - WOODPECKER_GITEA_SECRET=gto_zovinkqbrekitnhoiez5376dhzkccvz7253ndyaxqjq2gcb2okdq
+
+
+      # 👇 关键：特权插件白名单环境变量必须配置在 Agent 端，而不是 Server 端
+      - WOODPECKER_PLUGINS_PRIVILEGED=*,plugins/docker,docker.io/plugins/docker,plugins/docker:latest,docker.m.daocloud.io/appleboy/drone-docker-compose
+
+
+  woodpecker-agent:
+    image: woodpeckerci/woodpecker-agent:v3
+    # v3 版本中，通常不需要显式写 command: agent，镜像默认就是 agent 运行
+    restart: always
+    privileged: true
+    depends_on:
+      - woodpecker-server
+    volumes:
+      - woodpecker-agent-config:/etc/woodpecker
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WOODPECKER_SERVER=woodpecker-server:9000
+      - WOODPECKER_AGENT_SECRET=2f26c6a0e97e00c65a9e89fc39a95be532c19cb600c53fa555eada297c3569cb
+      # 👇 关键：特权插件白名单环境变量必须配置在 Agent 端，而不是 Server 端
+      - WOODPECKER_PLUGINS_PRIVILEGED=*,plugins/docker,docker.io/plugins/docker,plugins/docker:latest
+
+volumes:
+  woodpecker-server-data:
+  woodpecker-agent-config:
