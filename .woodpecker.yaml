@@ -25,12 +25,8 @@ steps:
   - name: 官方标准构建与推送 (宿主机物理硬缓存版)
     image: woodpeckerci/plugin-docker-buildx:latest-insecure
     privileged: true
-    # 💡 核心外挂 1：把宿主机的 docker.sock 和 buildx 缓存目录直接挂载进来！
-    # 这样插件在执行命令时，直接吃的是你服务器本地已经下载好的镜像，绝不联网，0秒结束
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - /var/lib/docker:/var/lib/docker
-      - /root/.docker:/root/.docker
     settings:
       repo: push.lovestory.cyou/abhors/demo
       registry: push.lovestory.cyou
@@ -39,18 +35,7 @@ steps:
         from_secret: nexus_docker_username
       password:
         from_secret: nexus_docker_password
-      output: type=image,push=true
-
-      # 内部编译器只认你的内网私服，彻底断绝外网
-      buildkit_config: |
-        [registry."docker.io"]
-          mirrors = ["registry.lovestory.cyou"]
-        [registry."push.lovestory.cyou"]
-          http = true
-          insecure = true
-        [registry."registry.lovestory.cyou"]
-          http = true
-          insecure = true
+      mirror: http://registry.lovestory.cyou
     when:
       event: push
       branch: master
