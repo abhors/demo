@@ -1,6 +1,4 @@
-# .woodpecker/build.yaml
-# 🛑 注意：文件夹多管线模式下，顶层不要写 kind: pipeline 和 name
-
+# 遵循文档：不写 kind，不写 name，直接以 steps 开头
 steps:
   - name: Java 构建
     image: docker.m.daocloud.io/library/maven:3.9.6-eclipse-temurin-17

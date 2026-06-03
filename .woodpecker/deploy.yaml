@@ -1,11 +1,4 @@
-# .woodpecker/deploy.yaml
-# 🛑 注意：文件夹多管线模式下，顶层不要写 kind: pipeline 和 name
-
-# 🔗 显式声明：必须等同目录下的 build.yaml 执行成功才触发当前部署
-depends_on:
-  - build.yaml
-
-# 🛠️ 你的专属集群矩阵定义（IP、账密全部完美隐藏进 Secret）
+# 遵循文档：顶层直接写 steps 和 matrix，不写 kind 和 name
 matrix:
   include:
     - NODE_NAME: "集群节点A (136服务器)"
@@ -22,7 +15,6 @@ steps:
   - name: 远程终端集群部署
     image: docker.m.daocloud.io/appleboy/drone-ssh:latest
     settings:
-      # 👇 1. 完美支持：动态读取你矩阵中填写的各个 Secret 键名
       host:
         from_secret: ${SECRET_NODE_IP}
       username:
@@ -30,35 +22,24 @@ steps:
       password:
         from_secret: ${SECRET_PASS_NAME}
       port: 22
-
-      # 👇 2. 完美修复 Linter 报错：把公共的阿里云账密直接作为 secrets 属性传入插件内部！
-      # 这样完全不需要在外层写 environment，插件会自动将它们注入成远程主机的环境变量
       secrets: [ aliyun_acr_username, aliyun_acr_password ]
-
-      # 把矩阵变量和公共账密同时下发到远程 136/114 终端
       envs: [ NODE_NAME, SECRET_NODE_IP, aliyun_acr_username, aliyun_acr_password ]
-
       script:
         - echo "========================================="
         - echo "🚀 开始部署节点：$NODE_NAME"
-        - echo "🔒 节点 IP 密文键名：$SECRET_NODE_IP"
         - echo "========================================="
-
-        # 1. 在各自的远程服务器本土直接登录阿里云（变量由 secrets/envs 安全带入）
         - docker login --username "$aliyun_acr_username" --password "$aliyun_acr_password" registry.cn-zhangjiakou.aliyuncs.com
-
-        # 2. 清理远程旧容器（防止重名冲突，加 || true 防止第一次找不到报错）
         - docker stop demo-container || true
         - docker rm demo-container || true
-
-        # 3. 远程各服务器本土拉取最新镜像，走各自服务器的网络，绝对不会超时
         - docker pull registry.cn-zhangjiakou.aliyuncs.com/abhors/demo:latest
-
-        # 4. 直接原生 docker run 轰起来！不需要任何额外文件，不需要 compose
         - docker run -d --name demo-container -p 8080:8080 --restart always registry.cn-zhangjiakou.aliyuncs.com/abhors/demo:latest
-
         - echo "🎉 $NODE_NAME 部署成功！"
 
 when:
   event: [push, pull_request, manual]
   branch: master
+
+# 🔗 遵循文档最核心逻辑：
+# 因为上游文件叫 build.yaml，这里必须写去掉后缀的文件名：build
+depends_on:
+  - build
