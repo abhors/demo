@@ -1,0 +1,29 @@
+# .woodpecker/build.yaml
+kind: pipeline
+name: build-pipeline
+
+steps:
+  - name: Java 构建
+    image: docker.m.daocloud.io/library/maven:3.9.6-eclipse-temurin-17
+    pull: true
+    commands:
+      - mvn clean package -DskipTests
+    volumes:
+      - /tmp/maven-cache:/root/.m2
+
+  - name: 镜像构建与推送
+    image: docker.m.daocloud.io/woodpeckerci/plugin-docker-buildx:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    settings:
+      repo: registry.cn-zhangjiakou.aliyuncs.com/abhors/demo
+      tags: latest
+      registry: registry.cn-zhangjiakou.aliyuncs.com
+      username:
+        from_secret: aliyun_acr_username
+      password:
+        from_secret: aliyun_acr_password
+      mirror: https://docker.m.daocloud.io
+    when:
+      event: [push, pull_request, manual]
+      branch: master

@@ -33,11 +33,9 @@ steps:
       event: push
       branch: master
 
-  # 第三步：抛弃所有不靠谱的 docker:cli 和 compose 插件，直接走纯 SSH 本土命令流
-  - name: 远程终端闭环部署 (纯命令直接冲)
+  - name: 远程终端部署
     image: appleboy/drone-ssh
     environment:
-      # 👇 先把 Woodpecker 的 Secret 塞进临时环境变量里
       MY_ALIYUN_USER:
         from_secret: aliyun_acr_username
       MY_ALIYUN_PASS:
