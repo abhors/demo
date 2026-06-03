@@ -1,7 +1,13 @@
 # .woodpecker.yaml
+
+# 1. 🛑 顶层统一定义全局变量
+vars:
+  - &NEXUS_REGISTRY "43.143.243.136:8082"  # 👈 以后换私服，全篇只改这一个地方！
+  - &NEXUS_HOSTED   "43.143.243.136:8083"
+
 steps:
   - name: Java 构建
-    image: docker.m.daocloud.io/library/maven:3.9.6-eclipse-temurin-17
+    image: *NEXUS_REGISTRY/library/maven:3.9.6-eclipse-temurin-17
     pull: true
     commands:
       - mvn clean package -DskipTests
@@ -12,24 +18,26 @@ steps:
       branch: master
 
   - name: 镜像构建与推送
-    image: docker.m.daocloud.io/woodpeckerci/plugin-docker-buildx:latest
+    image: *NEXUS_REGISTRY/woodpeckerci/plugin-docker-buildx:latest
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     settings:
-      repo: registry.cn-zhangjiakou.aliyuncs.com/abhors/demo
-      tags: latest
-      registry: registry.cn-zhangjiakou.aliyuncs.com
+      repo: *NEXUS_HOSTED/abhors/demo
+      registry: *NEXUS_HOSTED
       username:
-        from_secret: aliyun_acr_username
+        from_secret: nexus_docker_username
       password:
-        from_secret: aliyun_acr_password
-      mirror: https://docker.m.daocloud.io
+        from_secret: nexus_docker_password
+      mirror: http://43.143.243.136:8082
     when:
       event: push
       branch: master
 
   - name: 远程终端部署
-    image: appleboy/drone-ssh
+    image: *NEXUS_REGISTRY/appleboy/drone-ssh:latest
+    # 💡 核心魔术：通过 environment 将 YAML 锚点变量转换为容器内真正的环境变量
+    environment:
+      REGISTRY_VAR: *NEXUS_REGISTRY
     settings:
       host:
         from_secret: 136_ssh_host
@@ -38,19 +46,19 @@ steps:
       password:
         from_secret: 136_ssh_password
       port: 22
-      # 👇 完美修复 1：彻底干掉外层的 environment！
-      # 直接使用插件原生的 secrets 属性，安全导入系统里的这两个密文
-      secrets: [ aliyun_acr_username, aliyun_acr_password ]
-      # 👇 完美修复 2：告诉插件，在通过 SSH 连上 136 后，把上面这两个官方变量注入到远程终端里
-      envs: [ aliyun_acr_username, aliyun_acr_password ]
+      secrets: [ nexus_docker_username, nexus_docker_password ]
+      # 💡 完美抽离 1：告诉插件，顺便把刚才定义的 REGISTRY_VAR 变量也通过 SSH 跨网带到远程 136 终端去
+      envs: [ nexus_docker_username, nexus_docker_password, REGISTRY_VAR ]
       script:
-        # 注意：因为使用的是 secrets 原生注入，远程终端里的变量名直接叫 $aliyun_acr_username 和 $aliyun_acr_password
-        - docker login --username "$aliyun_acr_username" --password "$aliyun_acr_password" registry.cn-zhangjiakou.aliyuncs.com
+        - echo "========================================="
+        - echo "🚀 开始部署节点：136服务器"
+        - echo "========================================="
+        # 💡 完美抽离 2：在远程脚本中，直接使用 $REGISTRY_VAR 变量代替生硬的 IP 地址！
+        - docker login --username "$nexus_docker_username" --password "$nexus_docker_password" "$REGISTRY_VAR"
         - docker stop demo-container || true
         - docker rm demo-container || true
-        - docker pull registry.cn-zhangjiakou.aliyuncs.com/abhors/demo:latest
-        - docker run -d --name demo-container -p 8080:8080 --restart always registry.cn-zhangjiakou.aliyuncs.com/abhors/demo:latest
-    # 👇 完美修复 3：补上 when 过滤条件，消除 bad_habit 警告
+        - docker pull "$REGISTRY_VAR"/abhors/demo:latest
+        - docker run -d --name demo-container -p 8080:8080 --restart always "$REGISTRY_VAR"/abhors/demo:latest
     when:
       event: push
       branch: master
