@@ -35,7 +35,7 @@ steps:
         from_secret: nexus_docker_username
       password:
         from_secret: nexus_docker_password
-      http_proxy: http://registry.lovestory.cyou
+      mirror: http://registry.lovestory.cyou
     when:
       event: push
       branch: master
