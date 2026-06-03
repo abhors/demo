@@ -40,10 +40,14 @@ steps:
         from_secret: aliyun_acr_username
       ALIYUN_PASS:
         from_secret: aliyun_acr_password
-      DOCKER_HOST: tcp://136_ssh_host:2375
+      # 👇 1. 先把 Secret 里的远程服务器 IP 读取到一个临时变量里
+      REMOTE_HOST:
+        from_secret: 136_ssh_host
     commands:
-      - echo "$ALIYUN_USER" "$ALIYUN_PASS" $ALIYUN_REGISTRY
-      # 👉 顺手帮你把不安全的 echo 管道改成了安全的官方原生参数
+      # 👇 2. 在这里动态拼接成完整的 tcp://IP:2375 赋值给 DOCKER_HOST
+      - export DOCKER_HOST="tcp://${REMOTE_HOST}:2375"
+
+      # 以下命令保持不变
       - docker login --username "$ALIYUN_USER" --password "$ALIYUN_PASS" $ALIYUN_REGISTRY
       - docker compose pull
       - docker compose up -d
