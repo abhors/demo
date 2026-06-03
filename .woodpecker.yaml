@@ -1,4 +1,4 @@
-# 第 67 次部署
+# 第 68 次部署
 # 💡 全局变量块
 variables:
   - &APP_REGISTRY "push.lovestory.cyou"
@@ -62,11 +62,11 @@ steps:
         - echo "========================================="
         - echo "🚀 开始部署节点：*DEPLOY_HOST"
         - echo "========================================="
-        - docker login --username "$nexus_docker_username" --password "$nexus_docker_password" "registry.lovestory.cyou"
+        - docker login --username "$nexus_docker_username" --password "$nexus_docker_password" "push.lovestory.cyou"
         - docker stop "demo-container" || true
         - docker rm "demo-container" || true
-        - docker pull "registry.lovestory.cyou/abhors/demo:latest"
-        - docker run -d --name "demo-container" -p 8080:8080 --restart always "registry.lovestory.cyou/abhors/demo:latest"
+        - docker pull "push.lovestory.cyou/abhors/demo:latest"
+        - docker run -d --name "demo-container" -p 8080:8080 --restart always "push.lovestory.cyou/abhors/demo:latest"
     when:
       event: push
       branch: master
