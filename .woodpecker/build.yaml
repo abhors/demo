@@ -1,6 +1,5 @@
 # .woodpecker/build.yaml
-kind: pipeline
-name: build-pipeline
+# 🛑 注意：文件夹多管线模式下，顶层不要写 kind: pipeline 和 name
 
 steps:
   - name: Java 构建
@@ -10,6 +9,9 @@ steps:
       - mvn clean package -DskipTests
     volumes:
       - /tmp/maven-cache:/root/.m2
+    when:
+      event: [ push, pull_request, manual ]
+      branch: master
 
   - name: 镜像构建与推送
     image: docker.m.daocloud.io/woodpeckerci/plugin-docker-buildx:latest
