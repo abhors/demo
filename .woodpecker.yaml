@@ -1,22 +1,18 @@
 # .woodpecker.yaml
 
-# 🛑 终极完全体开关：无论项目、私服、部署机器怎么变，只改这 6 行！
-environment:
-  # 1. 业务与私服配置（已换成本地真实自建域名）
-  APP_REGISTRY: "push.lovestory.cyou"     # 👈 镜像推送走专属通道
-  APP_PULL_REGISTRY: "registry.lovestory.cyou" # 👈 远程136机器拉取走加速总门户
-  PROJECT_NAME: "abhors/demo"
-  CONTAINER_NAME: "demo-container"
-
-  # 2. 远程部署机器配置
-  DEPLOY_HOST: "43.143.243.136"        # 👈 你的腾讯云 136 服务器 IP
-  DEPLOY_PORT: 22                      # 👈 SSH 端口
-  DEPLOY_USER_SECRET: "136_ssh_user"   # 👈 对应系统 Secret 里的用户名别名
-  DEPLOY_PASS_SECRET: "136_ssh_password" # 👈 对应系统 Secret 里的密码别名
+# 💡 全局变量块
+variables:
+  - &APP_REGISTRY "push.lovestory.cyou"
+  - &APP_PULL_REGISTRY "registry.lovestory.cyou"
+  - &PROJECT_NAME "abhors/demo"
+  - &CONTAINER_NAME "demo-container"
+  - &DEPLOY_HOST "43.143.243.136"
+  - &DEPLOY_PORT 22
+  - &DEPLOY_USER_SECRET "136_ssh_user"
+  - &DEPLOY_PASS_SECRET "136_ssh_password"
 
 steps:
   - name: Java 构建
-    # 💡 隐式拦截：这里不加任何域名，Woodpecker宿主机会通过本地daemon.json自动走registry.lovestory.cyou下载并秒级缓存
     image: library/maven:3.9.6-eclipse-temurin-17
     pull: true
     commands:
@@ -29,11 +25,17 @@ steps:
 
   - name: 镜像构建与推送
     image: woodpeckerci/plugin-docker-buildx:latest
+    privileged: true
+    # 💡 解决方案：通过 environment 将锚点转化为当前步骤的环境变量
+    environment:
+      REGISTRY_DOMAIN: *APP_REGISTRY
+      PROJECT_PATH: *PROJECT_NAME
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     settings:
-      repo: ${APP_REGISTRY}/${PROJECT_NAME}
-      registry: ${APP_REGISTRY}
+      # 💡 完美拼接：此时可以使用标准的系统变量拼接，完美通过 Linter！
+      repo: ${REGISTRY_DOMAIN}/${PROJECT_PATH}
+      registry: *APP_REGISTRY
       username:
         from_secret: nexus_docker_username
       password:
@@ -43,30 +45,25 @@ steps:
       branch: master
 
   - name: 远程终端部署
-    # 💡 完美闭环：这里直接走你的私服拉取，刚才通过 1ms 毫秒源缓存下来的插件，这里将是“秒拉”
     image: registry.lovestory.cyou/appleboy/drone-ssh:latest
     settings:
-      host: ${DEPLOY_HOST}
-      port: ${DEPLOY_PORT}
+      host: *DEPLOY_HOST
+      port: *DEPLOY_PORT
       username:
-        from_secret: ${DEPLOY_USER_SECRET}
+        from_secret: *DEPLOY_USER_SECRET
       password:
-        from_secret: ${DEPLOY_PASS_SECRET}
-
-      # 安全传递与跨网传输
+        from_secret: *DEPLOY_PASS_SECRET
       secrets: [ nexus_docker_username, nexus_docker_password ]
-      envs: [ nexus_docker_username, nexus_docker_password, APP_REGISTRY, APP_PULL_REGISTRY, PROJECT_NAME, CONTAINER_NAME ]
+      envs: [ nexus_docker_username, nexus_docker_password ]
       script:
         - echo "========================================="
-        - echo "🚀 开始部署节点：${DEPLOY_HOST}"
+        - echo "🚀 开始部署节点：*DEPLOY_HOST"
         - echo "========================================="
-        # 📦 远程 136 机器由于通过 Group 组仓（registry.）更能享受到本地缓存的红利
-        - docker login --username "$nexus_docker_username" --password "$nexus_docker_password" "$APP_PULL_REGISTRY"
-        - docker stop "$CONTAINER_NAME" || true
-        - docker rm "$CONTAINER_NAME" || true
-        # 💡 细节优化：136机器拉取时，由于你的Hosted仓已经聚合在Group仓里，所以136直接走registry.lovestory.cyou拉取即可
-        - docker pull "$APP_PULL_REGISTRY"/"$PROJECT_NAME":latest
-        - docker run -d --name "$CONTAINER_NAME" -p 8080:8080 --restart always "$APP_PULL_REGISTRY"/"$PROJECT_NAME":latest
+        - docker login --username "$nexus_docker_username" --password "$nexus_docker_password" "registry.lovestory.cyou"
+        - docker stop "demo-container" || true
+        - docker rm "demo-container" || true
+        - docker pull "registry.lovestory.cyou/abhors/demo:latest"
+        - docker run -d --name "demo-container" -p 8080:8080 --restart always "registry.lovestory.cyou/abhors/demo:latest"
     when:
       event: push
       branch: master
