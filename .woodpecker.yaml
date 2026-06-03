@@ -1,4 +1,4 @@
-# 第 70 次部署
+# 第 73 次部署
 # 💡 全局变量块
 variables:
   - &APP_REGISTRY "push.lovestory.cyou"
