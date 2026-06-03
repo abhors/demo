@@ -1,4 +1,4 @@
-# 第 68 次部署
+# 第 70 次部署
 # 💡 全局变量块
 variables:
   - &APP_REGISTRY "push.lovestory.cyou"
@@ -26,9 +26,6 @@ steps:
     # 👇 1. 核心：必须换成官方文档指定的 -insecure 后缀镜像
     image: woodpeckerci/plugin-docker-buildx:latest-insecure
     privileged: true
-#    volumes:
-#       👇 官方推荐挂载 1：让容器内层 dockerd 能够读取到宿主机配好的不安全仓库（HTTP）和加速器凭证
-#      - /etc/docker:/etc/docker:ro
     settings:
       repo: push.lovestory.cyou/abhors/demo
       insecure: true # 这个是给内部 dockerd 用的
@@ -37,12 +34,15 @@ steps:
         from_secret: nexus_docker_username
       password:
         from_secret: nexus_docker_password
-
       # 👇 2. 核心：完全对齐官方不安全设置文档，强制 BuildKit 放行纯 HTTP
-#      buildkit_config: |
-#        [registry."push.lovestory.cyou"]
-#          http = true
-#          insecure = true
+      buildkit_config: |
+        [registry."push.lovestory.cyou"]
+          http = true
+          insecure = true
+      config: |
+        {
+          "insecure-registries": ["push.lovestory.cyou"]
+        }
     when:
       event: push
       branch: master
