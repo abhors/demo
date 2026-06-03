@@ -7,7 +7,7 @@ variables:
   - &PROJECT_NAME "abhors/demo"
   - &CONTAINER_NAME "demo-container"
   - &DEPLOY_HOST "43.143.243.136"
-  - &DEPLOY_PORT 22
+  - &DEPLOY_PORT "22"
   - &DEPLOY_USER_SECRET "136_ssh_user"
   - &DEPLOY_PASS_SECRET "136_ssh_password"
 
