@@ -32,39 +32,25 @@ steps:
     when:
       event: push
       branch: master
+  - name: 远程 Docker Compose 部署
+    image: docker.m.daocloud.io/library/docker:cli
+    environment:
+      # 1. 从 Secret 动态读取你的阿里云 ACR 凭证
+      - ALIYUN_REGISTRY=registry.cn-zhangjiakou.aliyuncs.com
+      - ALIYUN_USER:
+        from_secret: aliyun_acr_username
+      - ALIYUN_PASS:
+        from_secret: aliyun_acr_password
+      - DOCKER_HOST=tcp://136_ssh_host:2375
+    commands:
+      # 👉 核心操作 1：命令远程服务器登录阿里云，彻底解决之前 pull access denied 报错
+      - echo "$ALIYUN_PASS" | docker login --username "$ALIYUN_USER" --password-stdin $ALIYUN_REGISTRY
 
-  - name: 传输部署脚本到远程
-    image: appleboy/drone-scp:latest
-    settings:
-      host:
-        from_secret: 136_ssh_host
-      username:
-        from_secret: 136_ssh_user
-      password:
-        from_secret: 136_ssh_password
-      port: 22
-      # 👇 把本地的 deploy.sh 传送到远程服务器的 /tmp 目录下
-      target: /tmp/
-      source: deploy.sh
-    when:
-      event: push
-      branch: master
+      # 👉 核心操作 2：利用项目根目录下的 docker-compose.yaml，让远程服务器拉取最新镜像
+      - docker compose pull
 
-  - name: 目标机器部署
-    image: appleboy/drone-ssh:latest
-    settings:
-      host:
-        from_secret: 136_ssh_host
-      username:
-        from_secret: 136_ssh_user
-      password:
-        from_secret: 136_ssh_password
-      port: 22
-      command_timeout: 10m
-      # 👇 此时远程服务器上已经切切实实躺着这个脚本了，直接运行它！
-      script:
-        - chmod +x /tmp/deploy.sh
-        - /tmp/deploy.sh
+      # 👉 核心操作 3：一键启动/更新！Compose 会自动帮你停止旧容器、删掉旧容器、并用新镜像拉起新容器
+      - docker compose up -d
     when:
       event: push
       branch: master
