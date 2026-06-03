@@ -1,4 +1,4 @@
-# 💡 全局变量块 53
+# 💡 全局变量块 55
 variables:
   - &APP_REGISTRY "push.lovestory.cyou"
   - &APP_PULL_REGISTRY "registry.lovestory.cyou"
@@ -35,7 +35,7 @@ steps:
         from_secret: nexus_docker_username
       password:
         from_secret: nexus_docker_password
-      mirror: http://registry.lovestory.cyou
+      http_proxy: http://registry.lovestory.cyou
     when:
       event: push
       branch: master
