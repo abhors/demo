@@ -26,9 +26,9 @@ steps:
     # 👇 1. 核心：必须换成官方文档指定的 -insecure 后缀镜像
     image: woodpeckerci/plugin-docker-buildx:latest-insecure
     privileged: true
-    volumes:
-      # 👇 官方推荐挂载 1：让容器内层 dockerd 能够读取到宿主机配好的不安全仓库（HTTP）和加速器凭证
-      - /etc/docker:/etc/docker:ro
+#    volumes:
+#       👇 官方推荐挂载 1：让容器内层 dockerd 能够读取到宿主机配好的不安全仓库（HTTP）和加速器凭证
+#      - /etc/docker:/etc/docker:ro
     settings:
       repo: push.lovestory.cyou/abhors/demo
       insecure: true # 这个是给内部 dockerd 用的
