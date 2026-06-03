@@ -1,4 +1,4 @@
-# 第 63 次部署
+# 第 64 次部署
 # 💡 全局变量块
 variables:
   - &APP_REGISTRY "push.lovestory.cyou"
@@ -32,20 +32,17 @@ steps:
     settings:
       repo: push.lovestory.cyou/abhors/demo
       insecure: true # 这个是给内部 dockerd 用的
-      registry: *APP_REGISTRY
+      registry: push.lovestory.cyou
       username:
         from_secret: nexus_docker_username
       password:
         from_secret: nexus_docker_password
 
       # 👇 2. 核心：完全对齐官方不安全设置文档，强制 BuildKit 放行纯 HTTP
-      buildkit_config: |
-        [registry."registry.lovestory.cyou"]
-          http = true
-          insecure = true
-        [registry."push.lovestory.cyou"]
-          http = true
-          insecure = true
+#      buildkit_config: |
+#        [registry."push.lovestory.cyou"]
+#          http = true
+#          insecure = true
     when:
       event: push
       branch: master
