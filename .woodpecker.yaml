@@ -27,7 +27,7 @@ steps:
       event: [push, pull_request]
       branch: master
 
-  - name: 官方标准构建与推送 (宿主机物理硬缓存版)
+  - name: 构建与推送
     image: docker.m.daocloud.io/woodpeckerci/plugin-docker-buildx:latest-insecure
     privileged: true
     volumes:
