@@ -1,4 +1,4 @@
-# 第 96 次部署
+# 第 97 次部署
 variables:
   # --- 仓库与私服配置 ---
   - &APP_REGISTRY "push.lovestory.cyou"                    # 推送镜像的私服域名
