@@ -17,14 +17,9 @@ services:
       #      - WOODPECKER_GITHUB_SECRET=2157f7be71f2a6c91d6a859c622a29b1e1af3951
 
       - WOODPECKER_GITEA=true
-      - WOODPECKER_GITEA_URL=http://gitea.lovestory.cyou
+      - WOODPECKER_GITEA_URL=https://gitea.lovestory.cyou
       - WOODPECKER_GITEA_CLIENT=718dc249-2edc-4edd-8bc9-06ba569c2007
       - WOODPECKER_GITEA_SECRET=gto_zovinkqbrekitnhoiez5376dhzkccvz7253ndyaxqjq2gcb2okdq
-
-
-      # 👇 关键：特权插件白名单环境变量必须配置在 Agent 端，而不是 Server 端
-      - WOODPECKER_PLUGINS_PRIVILEGED=*,plugins/docker,docker.io/plugins/docker,plugins/docker:latest,docker.m.daocloud.io/appleboy/drone-docker-compose
-
 
   woodpecker-agent:
     image: woodpeckerci/woodpecker-agent:v3

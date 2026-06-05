@@ -1,0 +1,18 @@
+server {
+    listen 443 ssl;
+    server_name woodpecker.lovestory.cyou;
+
+    ssl_certificate /etc/nginx/cert/woodpecker.lovestory.cyou.pem;
+    ssl_certificate_key /etc/nginx/cert/woodpecker.lovestory.cyou.key;
+
+    client_max_body_size 0;
+    chunked_transfer_encoding on;
+
+    location / {
+        proxy_pass http://172.29.114.102:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header REMOTE-HOST $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}
