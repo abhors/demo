@@ -96,3 +96,36 @@ docker volumes rm woodpecker-server-data woodpecker-agent-config
 
 <a href="https://woodpecker-ci.org/">官网链接</a>
 
+# 添加项目
+
+点击添加项目
+
+然后就能看到 `gitea` 的仓库列表 
+
+添加你想添加的项目
+
+
+# 修改项目配置 
+
+管理用户点击界面右上角的 ⚙️
+选择仓库
+找到要修改的xiangmu 
+
+```text
+
+受信任
+
+网络
+
+流水线容器可以获得网络权限，例如更改 DNS。
+
+卷
+
+流水线容器允许被挂载卷。
+
+安全
+
+流水线容器可以获得安全权限。
+```
+
+这三个都勾选上 然后才可以正常拉取镜像 
