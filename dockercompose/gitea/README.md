@@ -51,3 +51,8 @@ docker compose up -d
 f1d20058-b8e7-4dee-861c-d772777e24bb
 gto_ysiwdncq6qt6cqicbaneyz54ewfaiq2zwadnhkfnnsv5oltglt2a
 
+# 创建仓库
+
+
+
+#  推送项目

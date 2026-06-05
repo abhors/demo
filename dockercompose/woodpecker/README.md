@@ -1,5 +1,43 @@
 # 部署步骤
 
+
+## 拉取镜像
+```shell
+# 先拉镜像 防止一直卡着
+docker pull woodpeckerci/woodpecker-server:v3
+docker pull woodpeckerci/woodpecker-agent:v3
+```
+
+## 开端口
+
+两种方式
+
+`ip+端口`
+
+阿里云开启端口
+
+`域名`
+
+域名转发配置
+
+申请域名-配置转发-申请证书-nginx配置
+这里不赘述
+
+参考文件
+`nginx\conf\conf.d\woodpecker.lovestory.cyou.conf-https`
+
+## 上传docker compose文件
+
+```shell
+rz docker-compose.yml
+```
+
+## 启动
+
+```shell
+docker compose up -d 
+```
+
 ## 配置
 
 先改配置
@@ -43,3 +81,18 @@ docker compose up -d
 docker volumes rm woodpecker-server-data woodpecker-agent-config 
    
 ```
+
+# 创建 CI/CD 管理文件
+
+有两种方式用于流水线部署
+
+1 `.woodpecker.yaml` 文件
+
+2 `.woodpecker` 文件夹
+
+优先单文件 使用文件夹就是可以分步骤 多版本构建 多机器部署
+
+非常灵活 全看自己发挥 详细使用看官网 这里不赘述
+
+<a href="https://woodpecker-ci.org/">官网链接</a>
+
