@@ -42,7 +42,7 @@ steps:
         from_secret: ${SECRET_USER_NAME}
       password:
         from_secret: ${SECRET_PASS_NAME}
-      secrets: [ nexus_docker_username, nexus_docker_password ] # 这俩属于私密Secret，直接进通道
+      secrets: [ NEXUS_DOCKER_USERNAME, NEXUS_DOCKER_PASSWORD ] # 这俩属于私密Secret，直接进通道
 
       # 💡 遵循官方文档指引 Step 2：在 envs 里声明上面这些变量的名字（不区分大小写，插件会自动大写）
       # 这样插件就会把这些变量强行同步到远程主机的 SSH 终端进程里
@@ -52,8 +52,8 @@ steps:
         - FULL_PULL_REPO
         - APP_REGISTRY
         - PROJECT_PORT
-        - nexus_docker_username
-        - nexus_docker_password
+        - NEXUS_DOCKER_USERNAME
+        - NEXUS_DOCKER_PASSWORD
 
       # 💡 遵循官方文档指引 Step 3：在脚本里统一改用标准的 $大写 符号来吃环境变量
       script:
@@ -62,7 +62,7 @@ steps:
         - echo "========================================="
 
         # 所有的参数均在远程机器通过系统大写变量精准传参
-        - docker login --username "$nexus_docker_username" --password "$nexus_docker_password" "$APP_REGISTRY"
+        - docker login --username "$NEXUS_DOCKER_USERNAME" --password "$NEXUS_DOCKER_PASSWORD" "$APP_REGISTRY"
         - docker stop "$CONTAINER_NAME" || true
         - docker rm "$CONTAINER_NAME" || true
         - docker pull "$FULL_PULL_REPO"
