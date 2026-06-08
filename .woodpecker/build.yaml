@@ -1,0 +1,43 @@
+# 遵循文档：不写 kind，不写 name，直接以 steps 开头
+# 要求:
+# 1.镜像仓库 nexus, 拉取域名 https://registry.lovestory.cyou (必须要https 并且开启'Allow anonymous'否则拉不下来 ) 推送域名 push.lovestory.cyou
+# 2.镜像仓库用户名密码配置在woodpecker, nexus_docker_username nexus_docker_password
+# 第 97 次部署
+variables:
+  # --- 仓库与私服配置 ---
+  - &APP_REGISTRY "push.lovestory.cyou"                    # 推送镜像的私服域名
+  - &APP_PULL_REGISTRY "registry.lovestory.cyou"            # 拉取基础镜像的私服域名
+  - &PROJECT_NAME "abhors/demo"                            # 项目镜像路径与名称
+  - &PROJECT_PORT "8080"                                   # 运行及映射端口
+  - &FULL_PUSH_REPO "push.lovestory.cyou/abhors/demo"      # 拼接后的完整推送地址
+  - &FULL_PULL_REPO "push.lovestory.cyou/abhors/demo:latest" # 远程部署拉取的目标地址
+  - &REPO_MIRROR "https://registry.lovestory.cyou"
+
+steps:
+  - name: Java 构建
+    image: library/maven:3.9.6-eclipse-temurin-17
+    pull: true
+    commands:
+      - mvn clean package -DskipTests
+    volumes:
+      - /tmp/maven-cache:/root/.m2
+    when:
+      event: [push, pull_request]
+      branch: master
+
+  - name: 构建与推送
+    image: woodpeckerci/plugin-docker-buildx:latest-insecure
+    privileged: true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    settings:
+      repo: *FULL_PUSH_REPO
+      registry: *APP_REGISTRY
+      username:
+        from_secret: nexus_docker_username
+      password:
+        from_secret: nexus_docker_password
+      mirror: *REPO_MIRROR
+    when:
+      event: push
+      branch: master
