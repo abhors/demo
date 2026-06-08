@@ -31,8 +31,7 @@ steps:
   - name: 远程终端集群部署
     image: appleboy/drone-ssh:latest
     settings:
-      host:
-        from_secret: ${SECRET_NODE_IP}
+      host: *DEPLOY_HOST
       username:
         from_secret: ${SECRET_USER_NAME}
       password:
