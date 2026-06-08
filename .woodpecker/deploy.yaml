@@ -18,9 +18,9 @@ variables:
 matrix:
   include:
     - NODE_NAME: "集群节点A"
-      SECRET_NODE_IP: "A_host"
-      SECRET_USER_NAME: "A_user"
-      SECRET_PASS_NAME: "A_password"
+      SECRET_NODE_IP: "43.143.243.136"
+      SECRET_USER_NAME: "136_ssh_user"
+      SECRET_PASS_NAME: "136_ssh_password"
 
 #    - NODE_NAME: "集群节点B"
 #      SECRET_NODE_IP: "B_host"
