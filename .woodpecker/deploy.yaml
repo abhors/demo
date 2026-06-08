@@ -30,6 +30,12 @@ matrix:
 steps:
   - name: 远程终端集群部署
     image: appleboy/drone-ssh:latest
+    environment:
+      REMOTE_HOST: *DEPLOY_HOST
+      CONTAINER_NAME: *CONTAINER_NAME
+      FULL_PULL_REPO: *FULL_PULL_REPO
+      APP_REGISTRY: *APP_REGISTRY
+      PROJECT_PORT: *PROJECT_PORT
     settings:
       host: *DEPLOY_HOST
       username:
