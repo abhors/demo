@@ -9,7 +9,7 @@
 | 方案 | 配置文件 | 适用场景 |
 |------|---------|---------|
 | 单文件流水线 | `.woodpecker.yaml`（项目根目录） | 单节点部署，快速上手 |
-| 多文件流水线 | `.woodpecker1/` 目录 | 多节点集群部署，流水线拆分与复用 |
+| 多文件流水线 | `.woodpecker/` 目录 | 多节点集群部署，流水线拆分与复用 |
 
 ---
 
@@ -28,16 +28,16 @@
 
 ### 必需的 Secrets
 
-| Secret 名称 | 说明 |
-|-------------|------|
+| Secret 名称 | 说明         |
+|-------------|------------|
 | `aliyun_acr_username` | 阿里云容器镜像仓库用户名 |
 | `aliyun_acr_password` | 阿里云容器镜像仓库密码 |
-| `136_ssh_host` | 136 服务器 IP 地址 |
-| `136_ssh_user` | 136 服务器 SSH 用户名 |
-| `136_ssh_password` | 136 服务器 SSH 密码 |
-| `114_ssh_host` | 114 服务器 IP 地址（集群部署时使用） |
-| `114_ssh_user` | 114 服务器 SSH 用户名（集群部署时使用） |
-| `114_ssh_password` | 114 服务器 SSH 密码（集群部署时使用） |
+| `nexus_docker_username` | nexus容器镜像仓库用户名 |
+| `nexus_docker_password` | nexus容器镜像仓库密码 |
+| `ssh_host` | 服务器 IP 地址  |
+| `ssh_user` | 服务器 SSH 用户名 |
+| `ssh_password` | 服务器 SSH 密码 |
+
 
 ---
 
@@ -63,19 +63,19 @@ Git Push (master 分支)
               ▼
 ┌──────────────────────────────┐
 │  Step 2: 镜像构建与推送       │
-│  使用 plugin-docker-buildx    │
-│  构建 Docker 镜像并推送至      │
-│  阿里云 ACR 镜像仓库           │
-│  触发条件: push 事件           │
+│  使用 plugin-docker-buildx   │
+│  构建 Docker 镜像并推送至     │
+│  阿里云 ACR 镜像仓库          │
+│  触发条件: push 事件          │
 └─────────────┬────────────────┘
               │
               ▼
 ┌──────────────────────────────┐
 │  Step 3: 远程终端部署         │
-│  SSH 连接到 136 服务器         │
+│  SSH 连接到服务器             │
 │  docker login → stop → rm    │
-│  → pull → run (端口 8080)    │
-│  触发条件: push 事件           │
+│  → pull → run                │
+│  触发条件: push 事件          │
 └──────────────────────────────┘
 ```
 
@@ -91,7 +91,7 @@ Git Push (master 分支)
 
 ---
 
-## 三、`.woodpecker1/` 目录 — 多文件流水线
+## 三、`.woodpecker/` 目录 — 多文件流水线
 
 ### 作用
 
@@ -100,10 +100,9 @@ Git Push (master 分支)
 ### 文件结构
 
 ```
-.woodpecker1/
+.woodpecker/
 ├── build.yaml    # 构建流水线：Maven 编译 + Docker 镜像构建推送
-├── deploy.yaml   # 部署流水线：SSH 连接集群节点，拉取镜像并启动容器
-└── README.md     # 本说明文档
+└── deploy.yaml   # 部署流水线：SSH 连接集群节点，拉取镜像并启动容器
 ```
 
 ### 3.1 `build.yaml` — 构建流水线
@@ -138,15 +137,15 @@ Git Push (master 分支)
                  │
                  ▼
     ┌─────────────────────────┐
-    │  Matrix 矩阵并行执行      │
+    │  Matrix 矩阵并行执行     │
     ├─────────────────────────┤
-    │  节点A: 136 服务器        │
-    │  SSH → login → pull      │
-    │  → stop → rm → run       │
+    │  节点A:    服务器        │
+    │  SSH → login → pull     │
+    │  → stop → rm → run      │
     ├─────────────────────────┤
-    │  节点B: 114 服务器        │
-    │  SSH → login → pull      │
-    │  → stop → rm → run       │
+    │  节点B:     服务器       │
+    │  SSH → login → pull     │
+    │  → stop → rm → run      │
     └─────────────────────────┘
 ```
 
@@ -162,15 +161,15 @@ Git Push (master 分支)
                        ▼
               ┌────────────────┐
               │  build.yaml    │
-              │  Step 1: 构建   │
-              │  Step 2: 推送   │
+              │  Step 1: 构建  │
+              │  Step 2: 推送  │
               └───────┬────────┘
                       │ depends_on
                       ▼
               ┌────────────────┐
               │  deploy.yaml   │
-              │  Matrix 并行:   │
-              │  136 ← → 114   │
+              │  Matrix 并行:  │
+              │    A ← → B     │
               └────────────────┘
 ```
 
@@ -179,7 +178,7 @@ Git Push (master 分支)
 | 特性 | `.woodpecker.yaml` | `.woodpecker1/` |
 |------|-------------------|-----------------|
 | 文件数量 | 1 个 | 2 个（build + deploy） |
-| 部署节点 | 单节点（136） | 多节点集群（136 + 114） |
+| 部署节点 | 单节点 | 多节点集群 |
 | 流水线复用 | 否 | 是（build 可被多条流水线依赖） |
 | 并行部署 | 否 | 是（Matrix 并行） |
 | 手动触发 | 不支持 | 支持（`manual` 事件） |
@@ -190,13 +189,13 @@ Git Push (master 分支)
 
 流水线中使用了以下 Docker 镜像，均通过国内镜像加速拉取：
 
-| 镜像 | 用途 |
-|------|------|
-| `docker.m.daocloud.io/library/maven:3.9.6-eclipse-temurin-17` | Maven 编译环境（JDK 17） |
-| `docker.m.daocloud.io/woodpeckerci/plugin-docker-buildx:latest` | Docker Buildx 构建插件 |
-| `appleboy/drone-ssh` | SSH 远程执行插件 |
-| `registry.cn-zhangjiakou.aliyuncs.com/abhors/demo:latest` | 最终产出的应用镜像 |
-| `registry.cn-zhangjiakou.aliyuncs.com/abhors/ibm-semeru-runtimes:open-17-jre` | 运行时基础镜像（Dockerfile 中定义） |
+| 镜像 | 用途                            |
+|------|-------------------------------|
+| `library/maven:3.9.6-eclipse-temurin-17` | Maven 编译环境（JDK 17）            |
+| `woodpeckerci/plugin-docker-buildx:latest` | Docker Buildx 构建插件 (会缓存并一直运行) |
+| `appleboy/drone-ssh` | SSH 远程执行插件                    |
+| `abhors/demo:latest` | 最终产出的应用镜像                     |
+| `ibm-semeru-runtimes:open-17-jre` | 运行时基础镜像（Dockerfile 中定义）       |
 
 ---
 
@@ -204,7 +203,7 @@ Git Push (master 分支)
 
 **Q: 为什么有两套流水线配置？**
 
-A: `.woodpecker.yaml` 是早期单节点方案，`.woodpecker1/` 是升级后的多文件集群方案。两者不会同时生效（Woodpecker 会优先读取根目录的 `.woodpecker.yaml`，若不存在则扫描子目录中的流水线文件）。
+A: `.woodpecker.yaml` 是早期单节点方案，`.woodpecker/` 是升级后的多文件集群方案。两者不会同时生效（Woodpecker 会优先读取根目录的 `.woodpecker.yaml`，若不存在则扫描子目录中的流水线文件）。
 
 **Q: Maven 缓存卷的作用？**
 
