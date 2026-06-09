@@ -36,6 +36,10 @@ steps:
       FULL_PULL_REPO: *FULL_PULL_REPO
       APP_REGISTRY: *APP_REGISTRY
       PROJECT_PORT: *PROJECT_PORT
+      NEXUS_DOCKER_USERNAME:
+        from_secret: "NEXUS_DOCKER_USERNAME"
+      NEXUS_DOCKER_PASSWORD:
+        from_secret: "NEXUS_DOCKER_PASSWORD"
     settings:
       host: *DEPLOY_HOST
       username:
