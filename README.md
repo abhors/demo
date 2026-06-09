@@ -203,7 +203,7 @@ Git Push (master 分支)
 
 **Q: 为什么有两套流水线配置？**
 
-A: `.woodpecker.yaml` 是早期单节点方案，`.woodpecker/` 是升级后的多文件集群方案。两者不会同时生效（Woodpecker 会优先读取根目录的 `.woodpecker.yaml`，若不存在则扫描子目录中的流水线文件）。
+A: `.woodpecker.yaml` 是早期单节点方案，`.woodpecker/` 是升级后的多文件集群方案。两者不会同时生效（Woodpecker 会优先读取根目录的 `.woodpecker/`，若不存在则扫描子目录中的流水线文件）。
 
 **Q: Maven 缓存卷的作用？**
 
