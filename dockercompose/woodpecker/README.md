@@ -140,3 +140,23 @@ docker volumes rm woodpecker-server-data woodpecker-agent-config
 docker pull registry.lovestory.cyou/woodpeckerci/plugin-git:latest
 
 ```
+
+经过测试发现 完全取决于 agent的宿主机 能不能拉取到
+宿主机设置了 domain 就可以拉取到了 但是前面不能加别名 加了就不是一个路径了
+
+```shell
+
+cat /etc/docker/daemon.json
+{
+    "registry-mirrors": [
+    "https://registry.lovestory.cyou",
+    "https://docker.1ms.run",
+    "https://proxy.vvvv.ee",
+    "https://dockerproxy.link"
+    ]
+}
+
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+
+```
