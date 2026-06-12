@@ -129,3 +129,14 @@ docker volumes rm woodpecker-server-data woodpecker-agent-config
 ```
 
 这三个都勾选上 然后才可以正常拉取镜像 
+
+# 运行流水线
+
+第一次运行需要预先拉取一次 woodpecker  的基础镜像
+
+```shell
+
+# 所有流水线的第一步都是拉取代码 目前不知道怎么设置到agent里 先这样设置
+docker pull registry.lovestory.cyou/woodpeckerci/plugin-git:latest
+
+```
