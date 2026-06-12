@@ -214,7 +214,8 @@ A: 将宿主机 `/tmp/maven-cache` 挂载到容器的 `/root/.m2`，确保每次
 A: 在 `deploy.yaml` 的 `matrix.include` 中添加新的节点配置，并在 Woodpecker Secrets 中创建对应的 `{name}_ssh_host`、`{name}_ssh_user`、`{name}_ssh_password` 密钥即可。
 
 
-[![Build Status](https://woodpecker.lovestory.cyou/api/badges/1/status.svg)]
+![Build Status](https://woodpecker.lovestory.cyou/api/badges/1/status.svg)
 
-![Security Scan](
-https://woodpecker.lovestory.cyou/api/badges/1/status.svg?branch=master&event=push)
+![Build Status](https://woodpecker.lovestory.cyou/api/badges/1/status.svg?branch=master)
+
+[![Build Status](https://woodpecker.lovestory.cyou/api/badges/1/status.svg)](https://woodpecker.lovestory.cyou/repos/1)

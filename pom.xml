@@ -101,6 +101,27 @@
 					</excludes>
 				</configuration>
 			</plugin>
+<!--			<plugin>-->
+<!--				<groupId>org.owasp</groupId>-->
+<!--				<artifactId>dependency-check-maven</artifactId>-->
+<!--				<version>12.1.0</version>-->
+<!--				<executions>-->
+<!--					<execution>-->
+<!--						<goals>-->
+<!--							<goal>check</goal>-->
+<!--						</goals>-->
+<!--					</execution>-->
+<!--				</executions>-->
+<!--				<configuration>-->
+<!--&lt;!&ndash;					<failBuildOnCVSS>7</failBuildOnCVSS>&ndash;&gt;-->
+<!--					<suppressionFile>${project.basedir}/dc-suppressions.xml</suppressionFile>-->
+<!--&lt;!&ndash;					<nvdApiKey>CD7F9976-4365-F111-836B-129478FCB64D</nvdApiKey>&ndash;&gt;-->
+<!--					<ossindexAnalyzerEnabled>false</ossindexAnalyzerEnabled>-->
+<!--					<retireJsAnalyzerEnabled>false</retireJsAnalyzerEnabled>-->
+<!--					<nodeAuditAnalyzerEnabled>false</nodeAuditAnalyzerEnabled>-->
+<!--					<nodeAnalyzerEnabled>false</nodeAnalyzerEnabled>-->
+<!--				</configuration>-->
+<!--			</plugin>-->
 		</plugins>
 	</build>
 
