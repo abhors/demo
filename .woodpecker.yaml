@@ -1,20 +1,4 @@
 # 第 97 次部署
-variables:
-  # --- 仓库与私服配置 ---
-  - &APP_REGISTRY "push.lovestory.cyou"                    # 推送镜像的私服域名
-  - &APP_PULL_REGISTRY "registry.lovestory.cyou"            # 拉取基础镜像的私服域名
-  - &PROJECT_NAME "abhors/demo"                            # 项目镜像路径与名称
-  - &PROJECT_PORT "8080"                                   # 运行及映射端口
-  - &FULL_PUSH_REPO "push.lovestory.cyou/abhors/demo"      # 拼接后的完整推送地址
-  - &FULL_PULL_REPO "push.lovestory.cyou/abhors/demo:latest" # 远程部署拉取的目标地址
-
-  # --- 部署目标机配置 ---
-  - &CONTAINER_NAME "demo-container"
-  - &DEPLOY_HOST "43.143.243.136"
-  - &DEPLOY_PORT "22"
-  - &DEPLOY_USER_SECRET "136_ssh_user"
-  - &DEPLOY_PASS_SECRET "136_ssh_password"
-
 steps:
   - name: Java 构建
     image: library/maven:3.9.6-eclipse-temurin-17
@@ -33,8 +17,8 @@ steps:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     settings:
-      repo: *FULL_PUSH_REPO
-      registry: *APP_REGISTRY
+      repo: push.lovestory.cyou/abhors/demo
+      registry: push.lovestory.cyou
       username:
         from_secret: nexus_docker_username
       password:
@@ -47,47 +31,32 @@ steps:
   - name: 远程终端部署
     image: registry.lovestory.cyou/appleboy/drone-ssh:latest
 
-    # 💡 遵循官方文档指引 Step 1：必须在最外层写 environment 块，且必须全部大写！
-    # 把我们顶部的 YAML 锚点变量，在这里全部转化为系统大写环境变量
     environment:
-      REMOTE_HOST: *DEPLOY_HOST
-      CONTAINER_NAME: *CONTAINER_NAME
-      FULL_PULL_REPO: *FULL_PULL_REPO
-      APP_REGISTRY: *APP_REGISTRY
-      PROJECT_PORT: *PROJECT_PORT
+      NEXUS_DOCKER_USERNAME:
+        from_secret: nexus_docker_username
+      NEXUS_DOCKER_PASSWORD:
+        from_secret: nexus_docker_password
 
     settings:
-      host: *DEPLOY_HOST
-      port: *DEPLOY_PORT
+      host: 43.143.243.136
+      port: 22
       username:
-        from_secret: *DEPLOY_USER_SECRET
+        from_secret: 136_ssh_user
       password:
-        from_secret: *DEPLOY_PASS_SECRET
-      secrets: [ nexus_docker_username, nexus_docker_password ] # 这俩属于私密Secret，直接进通道
-
-      # 💡 遵循官方文档指引 Step 2：在 envs 里声明上面这些变量的名字（不区分大小写，插件会自动大写）
-      # 这样插件就会把这些变量强行同步到远程主机的 SSH 终端进程里
+        from_secret: 136_ssh_password
+      secrets: [ nexus_docker_username, nexus_docker_password ]
       envs:
-        - remote_host
-        - container_name
-        - full_pull_repo
-        - app_registry
-        - project_port
-        - nexus_docker_username
-        - nexus_docker_password
-
-      # 💡 遵循官方文档指引 Step 3：在脚本里统一改用标准的 $大写 符号来吃环境变量
+        - NEXUS_DOCKER_USERNAME
+        - NEXUS_DOCKER_PASSWORD
       script:
         - echo "========================================="
-        - echo "🚀 开始部署节点：$REMOTE_HOST"   # 👈 严格按文档走，100% 能打印出 IP
+        - echo "🚀 开始部署节点：43.143.243.136"
         - echo "========================================="
-
-        # 所有的参数均在远程机器通过系统大写变量精准传参
-        - docker login --username "$nexus_docker_username" --password "$nexus_docker_password" "$APP_REGISTRY"
-        - docker stop "$CONTAINER_NAME" || true
-        - docker rm "$CONTAINER_NAME" || true
-        - docker pull "$FULL_PULL_REPO"
-        - docker run -d --name "$CONTAINER_NAME" -p "$PROJECT_PORT":"$PROJECT_PORT" --restart always "$FULL_PULL_REPO"
+        - docker login --username "${NEXUS_DOCKER_USERNAME}" --password "${NEXUS_DOCKER_PASSWORD}" push.lovestory.cyou
+        - docker stop demo-container || true
+        - docker rm demo-container || true
+        - docker pull push.lovestory.cyou/abhors/demo:latest
+        - docker run -d --name demo-container -p 8080:8080 --restart always push.lovestory.cyou/abhors/demo:latest
     when:
       event: push
       branch: master
