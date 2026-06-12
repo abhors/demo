@@ -2,7 +2,7 @@
 # 要求:
 # 1.镜像仓库 nexus, 拉取域名 https://registry.lovestory.cyou (必须要https 并且开启'Allow anonymous'否则拉不下来 ) 推送域名 push.lovestory.cyou
 # 2.镜像仓库用户名密码配置在woodpecker, nexus_docker_username nexus_docker_password
-# 第 98 次部署
+# 第 102 次部署
 variables:
   # --- 仓库与私服配置 ---
   - &APP_REGISTRY "push.lovestory.cyou"                    # 推送镜像的私服域名
