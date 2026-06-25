@@ -9,7 +9,7 @@ xxl:
     executor:
       appname: nksy-task-demo
       address:
-      ip:
+      ip: 43.143.243.136
       port: 9998
       logpath: /data/applogs/xxl-job/jobhandler
       logretentiondays: 3
