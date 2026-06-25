@@ -31,7 +31,7 @@ steps:
 
   # ============ 新增步骤 1：上传 docker-compose.yml ============
   - name: 上传编排文件
-    image: appleboy/drone-scp:latest  # 官方镜像，也可换成你的私有源
+    image: registry.lovestory.cyou/appleboy/drone-scp:latest  # 官方镜像，也可换成你的私有源
     settings:
       host: 43.143.243.136
       port: 22
