@@ -28,15 +28,38 @@ steps:
       event: push
       branch: master
 
-  - name: 远程终端部署
-    image: registry.lovestory.cyou/appleboy/drone-ssh:latest
 
+  # ============ 新增步骤 1：上传 docker-compose.yml ============
+  - name: 上传编排文件
+    image: appleboy/drone-scp:latest  # 官方镜像，也可换成你的私有源
+    settings:
+      host: 43.143.243.136
+      port: 22
+      username:
+        from_secret: 136_ssh_user
+      password:
+        from_secret: 136_ssh_password
+      # 要上传的本地文件（相对于工作空间根目录）
+      source:
+        - docker-compose.yml
+      # 远程服务器目标目录（如果不存在会自动创建）
+      target: /opt/demo-app
+      # 自动创建目标目录
+      mkdir: true
+      # 覆盖已有文件
+      overwrite: true
+    when:
+      event: push
+      branch: master
+
+  # ============ 修改步骤 2：执行远程 SSH 命令重启 ============
+  - name: 远程执行部署
+    image: registry.lovestory.cyou/appleboy/drone-ssh:latest
     environment:
       NEXUS_DOCKER_USERNAME:
         from_secret: nexus_docker_username
       NEXUS_DOCKER_PASSWORD:
         from_secret: nexus_docker_password
-
     settings:
       host: 43.143.243.136
       port: 22
@@ -52,11 +75,23 @@ steps:
         - echo "========================================="
         - echo "🚀 开始部署节点：43.143.243.136"
         - echo "========================================="
+
+        # 1. 进入编排文件所在目录
+        - cd /opt/demo-app
+
+        # 2. 登录私有镜像仓库
         - docker login --username "${NEXUS_DOCKER_USERNAME}" --password "${NEXUS_DOCKER_PASSWORD}" push.lovestory.cyou
-        - docker stop demo-container || true
-        - docker rm demo-container || true
-        - docker pull push.lovestory.cyou/abhors/demo:latest
-        - docker run -d --name demo-container -p 8080:8080 --restart always push.lovestory.cyou/abhors/demo:latest
+
+        # 3. 拉取最新镜像（compose up 会自动拉取，但单独拉取便于查看进度）
+        - docker compose pull
+
+        # 4. 优雅地重启服务（推荐，替代之前的手动 stop/rm/run）
+        #    --remove-orphans 会移除 Compose 文件中未定义的旧容器
+        - docker compose up -d --remove-orphans
+
+        # 5. 清理未被使用的旧镜像和缓存，释放磁盘空间
+        - docker image prune -f
+
     when:
       event: push
       branch: master
