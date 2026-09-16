@@ -1,0 +1,24 @@
+services:
+  mysql:
+    image: 43.143.243.136:8082/mysql:8.4.11
+    container_name: mysql-8.4
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: test
+      TZ: Asia/Shanghai
+    ports:
+      - "3306:3306"
+    volumes:
+      # 数据持久化
+      - ./data:/var/lib/mysql
+      # 日志持久化
+      - ./logs:/var/log/mysql
+      # 自定义配置目录（MySQL 8.4 官方推荐挂载到 conf.d）
+      - ./conf.d:/etc/mysql/conf.d
+      # 初始化 SQL 脚本目录
+      - ./init:/docker-entrypoint-initdb.d
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-time-zone=+08:00

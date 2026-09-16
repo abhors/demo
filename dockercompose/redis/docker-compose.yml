@@ -1,0 +1,15 @@
+services:
+  redis:
+    image: 43.143.243.136:8082/redis:8.6.2-alpine
+    container_name: redis-8.6
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      # 数据持久化目录（RDB / AOF 默认工作目录）
+      - ./data:/data
+      # 自定义配置文件
+      - ./conf/redis.conf:/usr/local/etc/redis/redis.conf
+      # 日志持久化（需在 redis.conf 中指定 logfile）
+      - ./logs:/var/log/redis
+    command: redis-server /usr/local/etc/redis/redis.conf

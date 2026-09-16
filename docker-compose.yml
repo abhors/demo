@@ -5,6 +5,6 @@ services:
     ports:
       - "8080:8080"
       - "9998:9998"
-    volumes:
-      - /data/applogs/xxl-job/jobhandler:/data/applogs/xxl-job/jobhandler
+#    volumes:
+#      - /data/applogs/xxl-job/jobhandler:/data/applogs/xxl-job/jobhandler
     restart: always
